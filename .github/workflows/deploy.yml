@@ -11,6 +11,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Render config.php from template
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          AN_API_TOKEN: ${{ secrets.AN_API_TOKEN }}
+        run: |
+          php -r '
+            $tpl = file_get_contents("config.template.php");
+            $out = strtr($tpl, [
+              "__STRIPE_SECRET_KEY__"     => getenv("STRIPE_SECRET_KEY") ?: "",
+              "__STRIPE_WEBHOOK_SECRET__" => getenv("STRIPE_WEBHOOK_SECRET") ?: "",
+              "__AN_API_TOKEN__"          => getenv("AN_API_TOKEN") ?: "",
+            ]);
+            file_put_contents("config.php", $out);
+          '
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -26,7 +42,7 @@ jobs:
             **/node_modules/**
             zadani.md
             README.md
-            config.php
+            config.template.php
             config.local.php
             .env
             .env.*
