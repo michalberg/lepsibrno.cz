@@ -548,7 +548,7 @@
     <h1 class="hero-line muted">Přes léto streamovací služby stejně moc nesleduješ.</h1>
     <p class="hero-line punch">Předplať si místo nich <span class="accent">lepší Brno.</span></p>
     <p class="hero-tagline">
-      Nastav si trvalý příkaz a podpoř Zelené v říjnových komunálních volbách — zbývá <strong id="monthsLeftHero">—</strong>.
+      Nastav si trvalý příkaz a podpoř Zelené v říjnových komunálních volbách — <strong id="monthsLeftHero">—</strong>.
     </p>
   </div>
 </section>
@@ -830,8 +830,8 @@
   // Dočasně používáme údaje z kampaně natalievencovska.cz, dokud nedostaneme vlastní fond
   const FUND_ID = '57e111cd859b5a092c8c7c1a';
   const ERROR_CONTACT = 'kampan@zelenebrno.cz';
-  const AN_URL = 'https://actionnetwork.org/api/v2/forms/396d43a2-696d-4c38-969f-9af48e107597/submissions/';
-  const AN_TAG = 'donor_brno_2026_predplatne';
+  const AN_URL = 'https://actionnetwork.org/api/v2/forms/bc501b67-c587-494a-bf1e-570a9f73e8f5/submissions/';
+  const AN_TAG = 'lepsibrno';
   const BANK_ACCOUNT = '2400146729/2010';
   // Backend endpoint, který vytvoří Stripe Checkout Session a vrátí platební URL
   const CHECKOUT_URL = '/create-checkout.php';
@@ -873,8 +873,19 @@
     if (n >= 2 && n <= 4) return n + nbsp + 'měsíce';
     return n + nbsp + 'měsíců';
   }
+  function timeLeftPhrase(months) {
+    const nbsp = ' ';
+    const now = new Date();
+    const target = new Date(2026, 9, 1);
+    const days = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (days < 7) return 'zbývá už jen několik dnů';
+    if (months < 4) return 'zbývá už jen pár týdnů';
+    if (months === 1) return 'zbývá 1' + nbsp + 'měsíc';
+    if (months >= 2 && months <= 4) return 'zbývají ' + months + nbsp + 'měsíce';
+    return 'zbývá ' + months + nbsp + 'měsíců';
+  }
   const MONTHS_LEFT = monthsUntilElection();
-  document.getElementById('monthsLeftHero').textContent = monthsWord(MONTHS_LEFT);
+  document.getElementById('monthsLeftHero').textContent = timeLeftPhrase(MONTHS_LEFT);
 
   // Countdown dní do konce června 2026 (konec matchingu)
   (function () {
@@ -1058,6 +1069,19 @@
         body: JSON.stringify(anBody),
         keepalive: true,
       }).catch(err => console.warn('Action Network submit failed:', err));
+
+      // Lokální evidence (SQLite na našem serveru)
+      fetch('log-donor.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          donor,
+          amount,
+          months_left: MONTHS_LEFT,
+          tracking: TRACKING,
+        }),
+        keepalive: true,
+      }).catch(err => console.warn('Local log failed:', err));
     })();
 
     // Platba převodem → stávající flow (fond → variabilní symbol → instrukce)

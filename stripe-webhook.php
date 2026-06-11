@@ -13,6 +13,7 @@
 declare(strict_types=1);
 
 $config = require __DIR__ . '/config.php';
+require __DIR__ . '/db.php';
 
 $payload   = file_get_contents('php://input');
 $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
@@ -70,6 +71,32 @@ try {
         $monthsLeft = max(1, $diff->y * 12 + $diff->m + ($diff->d > 0 ? 1 : 0));
     }
 } catch (Exception $e) { /* ponecháme 1 */ }
+
+// --- 0) Lokální evidence dárce ----------------------------------------------
+record_donor([
+    'payment_method'         => 'card',
+    'status'                 => 'paid',
+    'donor_name'             => $m['donor_name'] ?? null,
+    'donor_surname'          => $m['donor_surname'] ?? null,
+    'donor_birth'            => $m['donor_birth'] ?? null,
+    'donor_email'            => $email ?: null,
+    'donor_phone'            => $m['donor_phone'] ?? null,
+    'donor_address'          => $m['donor_address'] ?? null,
+    'donor_city'             => $m['donor_city'] ?? null,
+    'donor_zip'              => $m['donor_zip'] ?? null,
+    'amount'                 => $amount ?: null,
+    'months_left'            => $monthsLeft,
+    'total_campaign'         => $amount * $monthsLeft,
+    'utm_source'             => $m['utm_source'] ?? null,
+    'utm_medium'             => $m['utm_medium'] ?? null,
+    'utm_campaign'           => $m['utm_campaign'] ?? null,
+    'utm_content'            => $m['utm_content'] ?? null,
+    'utm_term'               => $m['utm_term'] ?? null,
+    'referrer'               => $m['referrer'] ?? null,
+    'landing_page'           => $m['landing_page'] ?? null,
+    'stripe_session_id'      => $session['id'] ?? null,
+    'stripe_subscription_id' => $session['subscription'] ?? null,
+]);
 
 // --- 1) Action Network -------------------------------------------------------
 if ($config['an_api_token'] !== '' && $email !== '') {
