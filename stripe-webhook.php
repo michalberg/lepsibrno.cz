@@ -134,11 +134,14 @@ if ($config['an_api_token'] !== '' && $email !== '') {
             ],
         ],
         'action_network:referrer_data' => [
-            'source'   => ($m['utm_source'] ?? '') ?: 'brnoflix',
+            'source'   => ($m['utm_source'] ?? '') ?: 'lepsibrno.cz',
             'referrer' => $m['referrer'] ?? '',
             'website'  => $m['landing_page'] ?? '',
         ],
         'add_tags' => [$config['an_tag']],
+        // U API submissions AN defaultně auto-response NEPOSÍLÁ — musíme
+        // explicitně zapnout. Pro kartu chceme děkovný mail z AN poslat.
+        'triggers' => ['autoresponse' => ['enabled' => true]],
     ];
     if (!empty($m['donor_phone'])) {
         $anBody['person']['phone_numbers'] = [['number' => $m['donor_phone']]];
