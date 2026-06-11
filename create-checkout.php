@@ -73,7 +73,7 @@ $params = [
             'currency'     => 'czk',
             'unit_amount'  => $amount * 100, // v haléřích
             'recurring'    => ['interval' => 'month'],
-            'product_data' => ['name' => 'Pravidelný příspěvek Lepší Brno (' . $amount . ' Kč/měsíc)'],
+            'product_data' => ['name' => 'Předplatné Lepší Brno – Dar Straně zelených (' . $amount . ' Kč/měsíc)'],
         ],
     ]],
     'metadata'          => $metadata,

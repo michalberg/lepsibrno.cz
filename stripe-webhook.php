@@ -61,14 +61,23 @@ $m       = $session['metadata'] ?? [];
 $amount  = (int)($m['amount'] ?? 0);
 $email   = (string)($m['donor_email'] ?? '');
 
-// Měsíce do konce kampaně — pro "celkem za kampaň".
+// Počet měsíčních plateb do voleb — sjednoceno s frontendem.
+// Počítáme 1. dny v měsíci od dneška (včetně, pokud je dnes 1.) do volebního dne.
 $monthsLeft = 1;
 try {
     $now = new DateTime('today');
-    $end = new DateTime($config['campaign_end']);
-    if ($end > $now) {
-        $diff = $now->diff($end);
-        $monthsLeft = max(1, $diff->y * 12 + $diff->m + ($diff->d > 0 ? 1 : 0));
+    $election = new DateTime($config['election_date'] ?? '2026-10-10');
+    if ($now <= $election) {
+        $cursor = new DateTime($now->format('Y-m') . '-01');
+        if ($cursor < $now) {
+            $cursor->modify('first day of next month');
+        }
+        $count = 0;
+        while ($cursor <= $election) {
+            $count++;
+            $cursor->modify('first day of next month');
+        }
+        $monthsLeft = max(1, $count);
     }
 } catch (Exception $e) { /* ponecháme 1 */ }
 
@@ -151,31 +160,6 @@ if ($config['an_api_token'] !== '' && $email !== '') {
     curl_close($ch);
     if ($anStatus >= 400) {
         error_log('Action Network error (' . $anStatus . '): ' . $anResp);
-    }
-}
-
-// --- 2) Děkovný e-mail -------------------------------------------------------
-if ($email !== '') {
-    $jmeno   = trim(($m['donor_name'] ?? '') . ' ' . ($m['donor_surname'] ?? ''));
-    $celkem  = number_format($amount * $monthsLeft, 0, ',', ' ');
-    $castka  = number_format($amount, 0, ',', ' ');
-
-    $body  = "Ahoj " . ($m['donor_name'] ?? '') . ",\n\n";
-    $body .= "moc děkujeme! Tvé měsíční předplatné " . $castka . " Kč jsme úspěšně nastavili.\n";
-    $body .= "Do voleb to dělá zhruba " . $celkem . " Kč na lepší Brno.\n\n";
-    $body .= "Platba běží přes Stripe a strhne se každý měsíc automaticky. Spravovat\n";
-    $body .= "nebo zrušit ji můžeš kdykoli přes odkaz ve svém potvrzení od Stripe.\n\n";
-    $body .= "Díky, že jsi v tom s námi. 💚\n";
-    $body .= $config['mail_from_name'] . "\n";
-
-    $headers  = 'From: ' . $config['mail_from_name'] . ' <' . $config['mail_from'] . ">\r\n";
-    $headers .= 'Reply-To: ' . $config['mail_from'] . "\r\n";
-    $headers .= "Content-Type: text/plain; charset=utf-8\r\n";
-
-    $subject = '=?UTF-8?B?' . base64_encode($config['mail_subject']) . '?=';
-
-    if (!@mail($email, $subject, $body, $headers)) {
-        error_log('Děkovný e-mail se nepodařilo odeslat: ' . $email);
     }
 }
 

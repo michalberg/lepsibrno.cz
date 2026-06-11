@@ -860,11 +860,19 @@
   }, { threshold: 0.08 });
   document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
 
-  // Měsíce do konce října 2026
+  // Počet měsíčních plateb do voleb (10. 10. 2026).
+  // Počítáme 1. dny v měsíci od dneška (včetně, pokud je dnes 1.) do volebního dne.
+  const ELECTION_DATE = new Date(2026, 9, 10); // 10. října 2026 (sobota)
   function monthsUntilElection() {
     const now = new Date();
-    const monthsToOct = (2026 - now.getFullYear()) * 12 + (10 - (now.getMonth() + 1));
-    const count = now.getDate() === 1 ? monthsToOct + 1 : monthsToOct;
+    let cursor = (now.getDate() === 1)
+      ? new Date(now.getFullYear(), now.getMonth(), 1)
+      : new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    let count = 0;
+    while (cursor <= ELECTION_DATE) {
+      count++;
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
     return Math.max(1, count);
   }
   function monthsWord(n) {
@@ -876,8 +884,7 @@
   function timeLeftPhrase(months) {
     const nbsp = ' ';
     const now = new Date();
-    const target = new Date(2026, 9, 1);
-    const days = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const days = Math.ceil((ELECTION_DATE.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     if (days < 7) return 'zbývá už jen několik dnů';
     if (months < 4) return 'zbývá už jen pár týdnů';
     if (months === 1) return 'zbývá 1' + nbsp + 'měsíc';

@@ -29,6 +29,8 @@ return [
     'mail_from_name'        => 'Zelení Brno',
     'mail_subject'          => 'Děkujeme za tvé předplatné Lepšího Brna! 💚',
 
-    // Volby do října 2026 — pro výpočet "celkem za kampaň" v e-mailu
-    'campaign_end'          => '2026-10-31',
+    // Volební den — pro výpočet počtu měsíčních plateb do voleb
+    'election_date'         => '2026-10-10',
+    // Zachováno pro zpětnou kompatibilitu; nepoužívá se v nové logice
+    'campaign_end'          => '2026-10-10',
 ];
