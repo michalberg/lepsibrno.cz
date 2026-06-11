@@ -80,9 +80,34 @@ function record_donor(array $data): ?int {
             $params[':' . $c] = $data[$c] ?? null;
         }
         $stmt->execute($params);
-        return (int)$pdo->lastInsertId();
+        $id = (int)$pdo->lastInsertId();
+        update_matching_status();
+        return $id;
     } catch (Throwable $e) {
         error_log('record_donor error: ' . $e->getMessage());
         return null;
+    }
+}
+
+/**
+ * Přepočte celkovou částku z prvních darů a zapíše do matching-status.json
+ * v webrootu (tj. v adresáři tohoto skriptu). Frontend ho fetchne a vykreslí.
+ */
+function update_matching_status(): void {
+    // Startovní hodnota — započítává dary mimo systém (např. dárci, kteří
+    // dorazili předtím, než byl spuštěn formulář).
+    $baseline = 6200;
+    $cap = 50000;
+    try {
+        $pdo = donor_db();
+        $total = (int)$pdo->query('SELECT COALESCE(SUM(amount), 0) FROM donors')->fetchColumn();
+        $payload = json_encode([
+            'matched' => min($total + $baseline, $cap),
+            'cap'     => $cap,
+            'updated' => date('c'),
+        ], JSON_UNESCAPED_SLASHES);
+        file_put_contents(__DIR__ . '/matching-status.json', $payload, LOCK_EX);
+    } catch (Throwable $e) {
+        error_log('update_matching_status error: ' . $e->getMessage());
     }
 }

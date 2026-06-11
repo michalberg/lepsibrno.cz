@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BRNOFLIX — Předplať si Lepší Brno</title>
+<title>Předplať si Lepší Brno</title>
 <meta name="description" content="Místo Netflixu si do října 2026 předplať Lepší Brno. Trvalá platba, která pomůže Natálii Vencovské a Zeleným uspět v komunálních volbách v Brně.">
 
 <meta property="og:type" content="website">
 <meta property="og:locale" content="cs_CZ">
-<meta property="og:site_name" content="BRNOFLIX">
-<meta property="og:title" content="BRNOFLIX — Předplať si Lepší Brno">
+<meta property="og:site_name" content="LepsiBrno.cz">
+<meta property="og:title" content="Předplať si Lepší Brno">
 <meta property="og:description" content="Přes léto stejně Netflix moc nesleduješ. Předplať si místo něj Lepší Brno.">
 
 <link rel="stylesheet" href="colors_and_type.css">
@@ -548,7 +548,7 @@
     <h1 class="hero-line muted">Přes léto streamovací služby stejně moc nesleduješ.</h1>
     <p class="hero-line punch">Předplať si místo nich <span class="accent">lepší Brno.</span></p>
     <p class="hero-tagline">
-      Nastav si trvalou platbu a pomoz Natálii Vencovské a brněnským Zeleným uspět v říjnových volbách — <strong id="monthsLeftHero">—</strong>.
+      Nastav si trvalou platbu a pomoz Natálii Vencovské a brněnským Zeleným uspět v říjnových komunálních volbách — <strong id="monthsLeftHero">—</strong>.
     </p>
   </div>
 </section>
@@ -710,8 +710,8 @@
 
   <form id="subscribeForm" class="form-card">
     <div class="method-toggle" id="methodToggle">
-      <button type="button" class="method-btn active" data-method="transfer">Trvalým příkazem<small>z účtu, bez poplatků</small></button>
-      <button type="button" class="method-btn" data-method="card">Kartou<small>přes Stripe, hned teď</small></button>
+      <button type="button" class="method-btn active" data-method="transfer">Trvalým příkazem<small>z účtu</small></button>
+      <button type="button" class="method-btn" data-method="card">Platební kartou<small>přes Stripe</small></button>
     </div>
     <h3>Vyplň své údaje</h3>
     <p class="form-card-lead" id="formLead">Údaje potřebujeme ze zákona. Po odeslání obdržíš platební instrukce pro trvalý bankovní příkaz.</p>
@@ -760,7 +760,7 @@
     </div>
 
     <button type="submit" class="form-submit" id="submitBtn">
-      <span id="submitPrefix">Předplatit</span> <span id="submitAmount">339 Kč</span> →
+      <span id="submitPrefix">Zobrazit údaje k platbě</span> <span id="submitAmount">339 Kč</span> →
     </button>
 
     <div class="form-error" id="formError"></div>
@@ -887,12 +887,35 @@
   const MONTHS_LEFT = monthsUntilElection();
   document.getElementById('monthsLeftHero').textContent = timeLeftPhrase(MONTHS_LEFT);
 
+  // Matching: načti aktuální stav z JSONu generovaného backendem
+  (function () {
+    const numEl = document.getElementById('matchingRemaining');
+    const barEl = document.getElementById('matchingProgressBar');
+    if (!numEl && !barEl) return;
+    fetch('matching-status.json', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || typeof data.matched !== 'number') return;
+        const matched = Math.max(0, Math.min(data.matched, data.cap || 50000));
+        const cap = data.cap || 50000;
+        if (numEl) numEl.textContent = matched.toLocaleString('cs-CZ');
+        if (barEl) barEl.style.width = (matched / cap * 100).toFixed(1) + '%';
+      })
+      .catch(() => { /* nech hardcoded fallback */ });
+  })();
+
   // Countdown dní do konce června 2026 (konec matchingu)
+  // Po 30. červnu 2026 celý matching box zmizí.
   (function () {
     const el = document.getElementById('matchingDaysLeft');
     if (!el) return;
+    const box = el.closest('.matching-inner');
     const now = new Date();
     const endOfJune = new Date(2026, 5, 30, 23, 59, 59); // měsíc index 5 = červen
+    if (now.getTime() > endOfJune.getTime()) {
+      if (box) box.style.display = 'none';
+      return;
+    }
     const ms = endOfJune.getTime() - now.getTime();
     const days = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
     let label;
@@ -921,7 +944,7 @@
   let paymentMethod = 'transfer';
   const LEAD_TEXT = {
     transfer: 'Údaje potřebujeme ze zákona. Po odeslání obdržíš platební instrukce pro trvalý bankovní příkaz.',
-    card: 'Údaje potřebujeme ze zákona. Po odeslání tě přesměrujeme na zabezpečenou bránu Stripe, kde zadáš číslo karty.',
+    card: 'Údaje potřebujeme ze zákona. Po odeslání tě přesměrujeme na zabezpečenou bránu Stripe, kde zadáš platbu kartou.',
   };
 
   function setMethod(m) {
@@ -956,7 +979,7 @@
 
   function refreshSubmitLabel() {
     const a = getSelectedAmount();
-    submitPrefixEl.textContent = paymentMethod === 'card' ? 'Zaplatit kartou' : 'Předplatit';
+    submitPrefixEl.textContent = paymentMethod === 'card' ? 'Předplatit kartou' : 'Zobrazit údaje k platbě';
     submitAmountEl.textContent = a > 0 ? a.toLocaleString('cs-CZ') + ' Kč' : '— Kč';
   }
 
@@ -1057,11 +1080,14 @@
           },
         },
         'action_network:referrer_data': {
-          source: TRACKING.utm_source || 'brnoflix',
+          source: TRACKING.utm_source || 'lepsibrno.cz',
           referrer: TRACKING.referrer,
           website: TRACKING.landing_page,
         },
         add_tags: [AN_TAG],
+        // U převodu posílá potvrzení dary.zeleni.cz — auto-response z AN
+        // by vznikla duplicita, proto ho per-submission vypneme.
+        triggers: { autoresponse: { enabled: false } },
       };
       fetch(AN_URL, {
         method: 'POST',
@@ -1095,7 +1121,7 @@
         periodicity: 'monthly',
         endDate: '2026-10-31',
       },
-      message: 'BRNOFLIX – předplatné Lepší Brno',
+      message: 'LepsiBrno.cz – předplatné Lepší Brno',
     };
 
     submitBtn.disabled = true;

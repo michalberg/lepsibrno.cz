@@ -8,3 +8,10 @@ config.php
 config.local.php
 .env
 .env.*
+
+# Runtime artefakty generované serverem
+matching-status.json
+donors.db
+donors.db-journal
+donors.db-wal
+donors.db-shm

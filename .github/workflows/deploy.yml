@@ -44,5 +44,6 @@ jobs:
             README.md
             config.template.php
             config.local.php
+            matching-status.json
             .env
             .env.*
