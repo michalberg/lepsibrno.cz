@@ -37,6 +37,27 @@
 
   .card { position: relative; z-index: 2; max-width: 620px; text-align: center; }
 
+  .personal {
+    margin: 0 auto 28px; max-width: 540px;
+    display: flex; align-items: center; gap: 20px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(11,210,111,0.25);
+    border-radius: 16px; padding: 18px 22px;
+    text-align: left;
+  }
+  .personal img {
+    width: 92px; height: 92px; border-radius: 50%; object-fit: cover; object-position: top center;
+    flex-shrink: 0; background: rgba(11,210,111,0.15);
+  }
+  .personal-quote { font-size: 16px; line-height: 1.5; color: rgba(255,255,255,0.92); font-style: italic; margin-bottom: 8px; }
+  .personal-sign { font-size: 13px; color: rgba(255,255,255,0.6); font-style: normal; }
+  .personal-sign a { color: var(--color-green); text-decoration: none; }
+  .personal-sign a:hover { text-decoration: underline; }
+  @media (max-width: 560px) {
+    .personal { flex-direction: column; text-align: center; }
+    .personal img { width: 110px; height: 110px; }
+  }
+
   .badge {
     width: 84px; height: 84px; margin: 0 auto 28px;
     border-radius: 50%; background: var(--color-green);
@@ -110,6 +131,14 @@
       teď posíláš sílu do kampaně Zelených pro říjnové komunální volby.
     </p>
 
+    <div class="personal">
+      <img src="assets/natalie.png" alt="Natálie Vencovská">
+      <div>
+        <p class="personal-quote">„Vrátila jsem se, protože vím, že Brno může být lepší. Díky, že jsi v tom se mnou. Bez tebe to nedáme."</p>
+        <p class="personal-sign">— Natálie Vencovská, lídryně kandidátky Zelených v&nbsp;Brně · <a href="https://natalievencovska.cz" target="_blank" rel="noopener">natalievencovska.cz</a></p>
+      </div>
+    </div>
+
     <div class="note">
       <p style="margin-bottom:10px"><strong>Co bude dál?</strong></p>
       Potvrzení o platbě ti dorazí e-mailem od Stripe i od nás. Platba se každý měsíc
@@ -125,7 +154,7 @@
 </main>
 
 <footer>
-  <span>© 2026 kampaň <a href="https://www.zelenebrno.cz" target="_blank" rel="noopener">Zelení Brno</a></span>
+  <span>© 2026 kampaň <a href="https://www.zelenebrno.cz" target="_blank" rel="noopener">Zelení Brno</a> · lídryně <a href="https://natalievencovska.cz" target="_blank" rel="noopener">Natálie Vencovská</a></span>
   <span>Komunální volby 2026</span>
 </footer>
 
