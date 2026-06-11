@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Děkujeme! — BRNOFLIX</title>
+<meta name="description" content="Děkujeme za tvé předplatné Lepšího Brna.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #0a1612; }
+  body {
+    font-family: 'UrbanGrotesk', sans-serif; color: #fff;
+    min-height: 100vh; display: flex; flex-direction: column;
+    background:
+      radial-gradient(ellipse 80% 60% at 90% 8%, rgba(11,210,111,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 70% at 5% 100%, rgba(11,210,111,0.07) 0%, transparent 60%),
+      #0a1612;
+    overflow-x: hidden;
+  }
+
+  .nav {
+    padding: 0 48px; height: 64px; display: flex; align-items: center;
+  }
+  .nav-logo {
+    text-decoration: none; font-family: 'SVGDEurotype', serif; font-style: italic;
+    font-weight: 600; font-size: 18px; color: rgba(255,255,255,0.55); transition: color 0.2s;
+  }
+  .nav-logo:hover { color: rgba(255,255,255,0.85); }
+
+  .wrap {
+    flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
+    padding: 40px 24px 80px;
+  }
+  .deco { position: absolute; z-index: 0; }
+
+  .card { position: relative; z-index: 2; max-width: 620px; text-align: center; }
+
+  .badge {
+    width: 84px; height: 84px; margin: 0 auto 28px;
+    border-radius: 50%; background: var(--color-green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; color: #0a1612; font-weight: 900;
+    box-shadow: 0 0 0 10px rgba(11,210,111,0.14);
+  }
+
+  .eyebrow {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--color-green); margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'TuskerGrotesk', sans-serif; text-transform: uppercase; letter-spacing: 0.02em;
+    font-size: 46px; line-height: 1.0; color: #fff; margin-bottom: 20px;
+  }
+  h1 .accent { color: var(--color-green); }
+  .lead {
+    font-size: 19px; font-weight: 500; line-height: 1.5; color: rgba(255,255,255,0.8);
+    margin: 0 auto 28px; max-width: 500px;
+  }
+  .lead strong { color: #fff; font-weight: 700; }
+
+  .note {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; padding: 20px 24px; margin: 0 auto 32px; max-width: 500px;
+    font-size: 15px; line-height: 1.55; color: rgba(255,255,255,0.7); text-align: left;
+  }
+  .note strong { color: #fff; }
+
+  .actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    text-decoration: none; padding: 13px 26px; border-radius: 6px;
+    font-weight: 700; font-size: 15px; transition: background 0.2s, transform 0.15s, border-color 0.2s;
+  }
+  .btn-primary { background: var(--color-green); color: #0a1612; }
+  .btn-primary:hover { background: #09b060; transform: scale(0.98); }
+  .btn-ghost { color: #fff; border: 1.5px solid rgba(255,255,255,0.25); }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.6); }
+
+  footer {
+    padding: 24px 48px; font-size: 13px; color: rgba(255,255,255,0.4);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  footer a { color: rgba(255,255,255,0.6); }
+
+  @media (max-width: 640px) {
+    .nav, footer { padding-left: 20px; padding-right: 20px; }
+    h1 { font-size: 36px; }
+    .lead { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">Zelení Brno</a>
+</nav>
+
+<main class="wrap">
+  <svg class="deco" style="top:12%;right:10%;width:90px;opacity:0.20" viewBox="0 0 60 60"><circle cx="30" cy="30" r="30" fill="#ffa6d1"/></svg>
+  <svg class="deco" style="bottom:18%;left:12%;width:46px;opacity:0.18" viewBox="0 0 60 60"><circle cx="30" cy="30" r="30" fill="#0bd26f"/></svg>
+  <svg class="deco" style="top:24%;left:8%;width:20px;opacity:0.22" viewBox="0 0 60 60"><rect width="60" height="60" fill="#ffa6d1" transform="rotate(12,30,30)"/></svg>
+
+  <div class="card">
+    <div class="badge">✓</div>
+    <div class="eyebrow">Platba proběhla</div>
+    <h1>Díky, že jsi v tom <span class="accent">s námi.</span></h1>
+    <p class="lead">
+      Tvé <strong>měsíční předplatné Lepšího Brna</strong> je nastavené. Každý měsíc
+      teď posíláš sílu do kampaně Zelených pro říjnové komunální volby.
+    </p>
+
+    <div class="note">
+      <p style="margin-bottom:10px"><strong>Co bude dál?</strong></p>
+      Potvrzení o platbě ti dorazí e-mailem od Stripe i od nás. Platba se každý měsíc
+      strhne automaticky — <strong>spravovat nebo zrušit</strong> ji můžeš kdykoli přes
+      odkaz ve svém potvrzení od Stripe.
+    </div>
+
+    <div class="actions">
+      <a href="/" class="btn btn-primary">Zpět na úvod</a>
+      <a href="https://www.zelenebrno.cz" target="_blank" rel="noopener" class="btn btn-ghost">Co děláme v Brně →</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>© 2026 kampaň <a href="https://www.zelenebrno.cz" target="_blank" rel="noopener">Zelení Brno</a></span>
+  <span>Komunální volby 2026</span>
+</footer>
+
+</body>
+</html>

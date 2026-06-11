@@ -1,0 +1,238 @@
+/* ============================================================
+   Zelení Brno 2026 — Design System
+   colors_and_type.css
+   ============================================================ */
+
+/* ── Fonts ────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'TuskerGrotesk';
+  src: url('fonts/TuskerGrotesk-5700Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SVGDEurotype';
+  src: url('fonts/SVGD-Eurotype-Soft-Demi.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'UrbanGrotesk';
+  src: url('fonts/Urban-Grotesk-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'UrbanGrotesk';
+  src: url('fonts/Urban-Grotesk-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'UrbanGrotesk';
+  src: url('fonts/Urban-Grotesk-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'UrbanGrotesk';
+  src: url('fonts/Urban-Grotesk-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'UrbanGrotesk';
+  src: url('fonts/Urban-Grotesk-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* ── Base Color Tokens ────────────────────────────────────── */
+:root {
+  --color-green:       #0bd26f;
+  --color-pink:        #ffa6d1;
+  --color-gray:        #d9d9d9;
+  --color-black:       #000000;
+  --color-white:       #ffffff;
+
+  --color-green-dark:  #067a40;   /* gradient end */
+  --color-green-mid:   #09b060;   /* hover state */
+
+  /* Gradient */
+  --gradient-primary:  linear-gradient(160deg, #0bd26f 0%, #067a40 100%);
+
+  /* Semantic */
+  --color-bg:          var(--color-white);
+  --color-bg-dark:     var(--color-black);
+  --color-bg-green:    var(--color-green);
+  --color-fg:          var(--color-black);
+  --color-fg-on-green: var(--color-black);
+  --color-fg-on-dark:  var(--color-white);
+  --color-accent:      var(--color-green);
+  --color-accent-soft: var(--color-pink);
+  --color-muted:       var(--color-gray);
+
+  /* Decorative shape colors */
+  --color-deco-primary: var(--color-pink);   /* 75% usage */
+  --color-deco-secondary: var(--color-gray); /* 25% usage */
+}
+
+/* ── Base Typography Tokens ───────────────────────────────── */
+:root {
+  /* Font families */
+  --font-display:    'TuskerGrotesk', sans-serif;
+  --font-italic:     'SVGDEurotype', serif;
+  --font-ui-heavy:   'UrbanGrotesk', sans-serif;
+  --font-ui:         'UrbanGrotesk', sans-serif;
+
+  /* Font weights */
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-bold:      700;
+  --fw-black:     900;
+
+  /* TuskerGrotesk rules */
+  --display-transform:  uppercase;
+  --display-spacing:    0.02em;
+
+  /* Base scale (at 1080px canvas width) */
+  --fs-hero-title:      50px;
+  --fs-hero-subtitle:   26px;
+  --fs-content-title:   36px;
+  --fs-content-body:    26px;
+  --fs-quote:           26px;
+  --fs-quote-author:    16px;
+  --fs-quote-role:      13px;
+  --fs-stat-number:     80px;
+  --fs-stat-unit:       26px;
+  --fs-stat-desc:       26px;
+  --fs-cta:             60px;
+  --fs-cta-url:         26px;
+  --fs-image-title:     38px;
+  --fs-image-caption:   16px;
+  --fs-ba-title:        32px;
+  --fs-ba-label:        16px;
+}
+
+/* ── Semantic Typography Styles ───────────────────────────── */
+
+/* H1 — hero display title */
+h1, .h1 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-hero-title);
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-spacing);
+  line-height: 1.0;
+  color: var(--color-fg);
+}
+
+/* H2 — section/content title */
+h2, .h2 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-content-title);
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-spacing);
+  line-height: 1.05;
+  color: var(--color-fg);
+}
+
+/* H3 — name/secondary heading */
+h3, .h3 {
+  font-family: var(--font-ui-heavy);
+  font-weight: var(--fw-black);
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--color-fg);
+}
+
+/* Body copy */
+p, .body {
+  font-family: var(--font-ui);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-content-body);
+  line-height: 1.45;
+  color: var(--color-fg);
+}
+
+/* Quote */
+.quote {
+  font-family: var(--font-italic);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-quote);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* UI label */
+.label {
+  font-family: var(--font-ui);
+  font-weight: var(--fw-bold);
+  font-size: 14px;
+  letter-spacing: 0.01em;
+}
+
+/* Caption */
+.caption {
+  font-family: var(--font-italic);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-image-caption);
+  font-style: italic;
+}
+
+/* Stat number */
+.stat-number {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-stat-number);
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-spacing);
+  line-height: 1.0;
+}
+
+/* CTA */
+.cta-text {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-cta);
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-spacing);
+}
+
+/* ── Export Canvas Sizes ──────────────────────────────────── */
+:root {
+  --canvas-ig-portrait-w: 1080px;
+  --canvas-ig-portrait-h: 1350px;
+  --canvas-ig-square-w:   1080px;
+  --canvas-ig-square-h:   1080px;
+  --canvas-ig-stories-w:  1080px;
+  --canvas-ig-stories-h:  1920px;
+  --canvas-facebook-w:    1920px;
+  --canvas-facebook-h:    1005px;
+}
+
+/* ── Spacing & Layout Tokens ──────────────────────────────── */
+:root {
+  --space-xs:   8px;
+  --space-sm:   16px;
+  --space-md:   24px;
+  --space-lg:   40px;
+  --space-xl:   64px;
+  --space-2xl:  96px;
+
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  16px;
+  --radius-pill: 999px;
+
+  /* Logo sizing */
+  --logo-w: 16%;  /* of canvas width */
+}

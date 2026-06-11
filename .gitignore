@@ -1,0 +1,10 @@
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Secrets — nahrávat ručně na FTP s ostrými hodnotami
+config.php
+config.local.php
+.env
+.env.*
