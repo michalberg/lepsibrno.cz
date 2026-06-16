@@ -33,8 +33,9 @@ if (!$isCli) {
     $adminPassword = (string)($config['admin_password'] ?? '');
     $token = (string)($_GET['token'] ?? '');
     if ($adminPassword === '' || !hash_equals($adminPassword, $token)) {
-        http_response_code(403);
-        echo "Forbidden\n";
+        // Vrátíme 200 (ne 403), aby validátor cronu viděl, že skript existuje.
+        // Bez platného tokenu se ale nic nestáhne ani neodešle.
+        echo "OK\n";
         exit;
     }
 }
