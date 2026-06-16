@@ -228,12 +228,6 @@ function render_login(string $error, bool $notConfigured): void {
       <div class="card"><div class="label">Jednorázové celkem</div><div class="value"><?= kc($onetimeSum) ?></div></div>
     <?php endif; ?>
     <div class="card"><div class="label">Za kampaň očekávané</div><div class="value"><?= kc($sumCampaign + $onetimeSum) ?></div></div>
-    <?php foreach ($byStatus as $st => $d): ?>
-      <div class="card">
-        <div class="label"><?= h(status_label((string)$st)) ?></div>
-        <div class="value"><?= $d['count'] ?> <span class="muted" style="font-size:.9rem">· <?= kc($d['monthly']) ?>/měs</span></div>
-      </div>
-    <?php endforeach; ?>
   </div>
 
   <h2>Předplatné <span class="muted">(<?= $count ?>)</span></h2>
@@ -262,33 +256,28 @@ function render_login(string $error, bool $notConfigured): void {
   <div class="scroll">
     <table>
       <thead><tr>
-        <th>Datum</th><th>Stav</th><th>Metoda</th><th>Jméno</th><th>E-mail</th><th>Telefon</th>
+        <th>Datum</th><th>Metoda</th><th>Jméno</th><th>E-mail</th><th>Telefon</th>
         <th class="num">Měsíčně</th><th class="num">Měsíců</th><th class="num">Za kampaň</th>
-        <th>VS</th><th>Source</th><th>Medium</th><th>Campaign</th><th>Content</th>
-        <th>Město</th><th>Stripe sub.</th>
+        <th>Source</th><th>Content</th><th>Město</th>
       </tr></thead>
       <tbody>
       <?php foreach ($rows as $r):
-        $st = (string)($r['status'] ?? '');
-        $tagClass = $st === 'paid' ? 'paid' : ($st === 'intent' ? 'intent' : 'other');
+        $m = (string)($r['payment_method'] ?? '');
+        $micon  = $m === 'card' ? '💳' : ($m === 'transfer' ? '🏦' : '•');
+        $mlabel = $m === 'card' ? 'Karta' : ($m === 'transfer' ? 'Převod' : $m);
       ?>
         <tr>
           <td class="muted"><?= h($r['created_at']) ?></td>
-          <td><span class="tag <?= $tagClass ?>"><?= h(status_label($st)) ?></span></td>
-          <td><?= h($r['payment_method']) ?></td>
+          <td style="text-align:center" title="<?= h($mlabel) ?>"><?= $micon ?></td>
           <td><?= h(trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? ''))) ?></td>
           <td><?= h($r['donor_email']) ?></td>
           <td><?= h($r['donor_phone']) ?></td>
           <td class="num"><?= $r['amount'] !== null ? kc((int)$r['amount']) : '—' ?></td>
           <td class="num"><?= h($r['months_left']) ?></td>
           <td class="num"><?= $r['total_campaign'] !== null ? kc((int)$r['total_campaign']) : '—' ?></td>
-          <td><?= h($r['variable_symbol']) ?></td>
           <td><?= h($r['utm_source']) ?></td>
-          <td><?= h($r['utm_medium']) ?></td>
-          <td><?= h($r['utm_campaign']) ?></td>
           <td><?= h($r['utm_content']) ?></td>
           <td><?= h($r['donor_city']) ?></td>
-          <td class="muted"><?= h($r['stripe_subscription_id']) ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
