@@ -1,0 +1,43 @@
+name: Patch server config.php
+
+# Jednorázová oprava: doplní do serverového config.php klíče pro admin stránku
+# a sync jednorázových darů. Spouští se ručně (workflow_dispatch).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  patch-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y lftp
+
+      - name: Download, patch and upload config.php
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          REMOTE="lepsibrno.cz/public_html"
+          LFTP_OPTS="set ssl:verify-certificate no; set ftp:ssl-allow true; set net:max-retries 2; set net:timeout 20;"
+
+          echo "→ stahuji config.php"
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$LFTP_OPTS get $REMOTE/config.php -o config_server.php; bye"
+          test -s config_server.php
+          echo "  staženo ($(wc -c < config_server.php) B)"
+
+          cp config_server.php config_server.php.bak
+
+          echo "→ patchuji"
+          php .github/patch-config.php config_server.php config_patched.php
+
+          echo "→ kontrola syntaxe"
+          php -l config_patched.php
+
+          echo "→ nahrávám zálohu + nový config"
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$LFTP_OPTS put config_server.php.bak -o $REMOTE/config.php.bak; put config_patched.php -o $REMOTE/config.php; bye"
+          echo "✓ hotovo"
