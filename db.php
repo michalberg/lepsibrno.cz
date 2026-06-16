@@ -53,6 +53,26 @@ function donor_db(): PDO {
     ");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_donors_email ON donors(donor_email)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_donors_created ON donors(created_at)");
+    // Evidence jednorázových darů z dary.zeleni.cz už odeslaných do Action Networku.
+    // payment_id = _id platby z dary API → zabrání opakovanému odeslání.
+    // Drží i údaje dárce, aby šly zobrazit v transakce.php (mimo tabulku donors,
+    // ať neovlivní matching ukazatel, který sčítá donors.amount).
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS onetime_synced (
+            payment_id      TEXT PRIMARY KEY,
+            synced_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            dary_created_at TEXT,
+            donor_name      TEXT,
+            donor_surname   TEXT,
+            donor_email     TEXT,
+            donor_phone     TEXT,
+            donor_city      TEXT,
+            amount          INTEGER,
+            vs              TEXT,
+            status          TEXT
+        )
+    ");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_onetime_created ON onetime_synced(dary_created_at)");
     return $pdo;
 }
 

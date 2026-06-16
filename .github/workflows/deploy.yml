@@ -16,6 +16,9 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
           AN_API_TOKEN: ${{ secrets.AN_API_TOKEN }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DARY_USERNAME: ${{ secrets.DARY_USERNAME }}
+          DARY_PASSWORD: ${{ secrets.DARY_PASSWORD }}
         run: |
           php -r '
             $tpl = file_get_contents("config.template.php");
@@ -23,6 +26,9 @@ jobs:
               "__STRIPE_SECRET_KEY__"     => getenv("STRIPE_SECRET_KEY") ?: "",
               "__STRIPE_WEBHOOK_SECRET__" => getenv("STRIPE_WEBHOOK_SECRET") ?: "",
               "__AN_API_TOKEN__"          => getenv("AN_API_TOKEN") ?: "",
+              "__ADMIN_PASSWORD__"        => getenv("ADMIN_PASSWORD") ?: "",
+              "__DARY_USERNAME__"         => getenv("DARY_USERNAME") ?: "",
+              "__DARY_PASSWORD__"         => getenv("DARY_PASSWORD") ?: "",
             ]);
             file_put_contents("config.php", $out);
           '

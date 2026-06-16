@@ -19,10 +19,24 @@ return [
     'success_url'           => 'https://lepsibrno.cz/dekujeme.html?session_id={CHECKOUT_SESSION_ID}',
     'cancel_url'            => 'https://lepsibrno.cz/#predplatit',
 
+    // Heslo do administrace (stránka /transakce.php). Nastav přes GitHub Secret ADMIN_PASSWORD.
+    'admin_password'        => '__ADMIN_PASSWORD__',
+
     // Action Network — server-to-server přes API token (Group → API & Sync → API key)
     'an_api_token'          => '__AN_API_TOKEN__',
     'an_url'                => 'https://actionnetwork.org/api/v2/forms/bc501b67-c587-494a-bf1e-570a9f73e8f5/submissions/',
     'an_tag'                => 'lepsibrno',
+    // Tag pro jednorázové dárce stažené z dary.zeleni.cz (sync-onetime.php)
+    'an_tag_onetime'        => 'lepsibrno_jednorazovy',
+
+    // dary.zeleni.cz — admin API pro stahování jednorázových darů (sync-onetime.php)
+    'dary_api_base'         => 'https://api.dary.zeleni.cz',
+    'dary_username'         => '__DARY_USERNAME__',
+    'dary_password'         => '__DARY_PASSWORD__',
+    'dary_fund_id'          => '57e111cd859b5a092c8c7c1a',
+    // Filtry pro sync: jen dary od tohoto data a od této částky (Kč). Vyloučí i testy.
+    'onetime_since'         => '2026-01-01',
+    'onetime_min_amount'    => 30,
 
     // Děkovný e-mail
     'mail_from'             => 'kampan@zelenebrno.cz',
