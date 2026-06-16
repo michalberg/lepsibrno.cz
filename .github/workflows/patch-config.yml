@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           REMOTE="lepsibrno.cz/public_html"
-          LFTP_OPTS="set ssl:verify-certificate no; set ftp:ssl-allow true; set net:max-retries 2; set net:timeout 20;"
+          LFTP_OPTS="set ssl:verify-certificate no; set ssl:check-hostname no; set ftp:ssl-allow true; set ftp:ssl-protect-data true; set ftp:use-pasv-address no; set ftp:passive-mode true; set net:max-retries 2; set net:timeout 15;"
 
           echo "→ stahuji config.php"
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$LFTP_OPTS get $REMOTE/config.php -o config_server.php; bye"
