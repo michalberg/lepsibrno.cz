@@ -227,11 +227,11 @@ function vztahLabel(d){const dn=truthy(d.donor),m=truthy(d.member);return dn&&m?
 function engClean(e){return (e||"").replace(/\s*\(.*\)/,"");}
 function intro(d){const past=truthy(d.donor),mem=truthy(d.member);
   if(mem){
-    let s="Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme našim lidem – a vy jste náš člen(ka), tak volám rovnou vám.";
-    if(past)s="Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme našim lidem – jste náš člen(ka) a v minulosti jste nás i podpořil(a), za což díky. Tak volám rovnou vám.";
+    let s="Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme našim lidem – a vy jste náš člen(ka), proto volám přímo vám.";
+    if(past)s="Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme našim lidem – jste náš člen(ka) a v minulosti jste nás i podpořil(a), za to moc děkujeme. Proto volám přímo vám.";
     return{say:s+" Máte teď chvilku?",tone:"Nejvřelejší – jsme jeden tým. Důvod hovoru je kampaň; členství/dar zmiň jen jako proč voláš jemu."};}
-  if(past)return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme lidem, kteří nám fandí – vy jste nás v minulosti podpořil(a), za což díky, tak volám rovnou vám. Máte teď chvilku?",tone:"Reaktivace. Důvod = kampaň; dřívější dar je jen reference, proč voláš právě jemu (+ krátké díky). Po hovoru nech mluvit jeho."};
-  return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme Brňanům, kterým není jedno, jak město vypadá – a vy jste mezi nimi. Máte teď chvilku?",tone:"Důvod = kampaň. Dotazník NEzmiňuj; jeho téma použij přirozeně až v dalším kroku."};}
+  if(past)return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme lidem, kteří nás už někdy podpořili – a vy mezi ně patříte. Děkujeme za to. Máte teď chvilku?",tone:"Reaktivace. Důvod = kampaň; dřívější dar je jen reference, proč voláš právě jemu (+ krátké díky). Po hovoru nech mluvit jeho."};
+  return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme Brňanům, kterým není jedno, jak město vypadá – a vy mezi ně patříte. Máte teď chvilku?",tone:"Důvod = kampaň. Dotazník NEzmiňuj; jeho téma použij přirozeně až v dalším kroku."};}
 // téma z dotazníku → konkrétní závazek z programu (aby „co chceme prosadit“ sedělo na jeho prioritu)
 const TEMA={
  "bydlení":"opravit přes 1 500 prázdných obecních bytů a udělat z bydlení jasnou prioritu města",
@@ -247,17 +247,19 @@ function middle(d){const p=PERSONA[d.persona]??PERSONA[""];
   if(truthy(d.dotaznik)&&d.t1){
     const temata="„"+d.t1+"“"+(d.t2?" a „"+d.t2+"“":"");
     const k=TEMA[d.t1];
-    const say="Jedno z témat, které v Brně teď hodně řešíme, je "+d.t1+(d.t2?" a "+d.t2:"")+". "+(k?"Chceme "+k+".":"Přesně na tyhle věci se chceme zaměřit.")+" Je to něco, co vnímáte i vy?";
+    const hook=d.t2?("Mezi věci, které teď v Brně hodně řešíme, patří "+d.t1+" a "+d.t2+"."):("Jedno z témat, které teď v Brně hodně řešíme, je "+d.t1+".");
+    const say=hook+" "+(k?"Chceme "+k+".":"Přesně na tyhle věci se chceme zaměřit.")+" Je to něco, co vnímáte i vy?";
     return{say,talk:"jeho priority: "+d.t1+(d.t2?", "+d.t2:"")+" – použij jako přirozené téma, dotazník nezmiňuj",avoid:"",personalized:true};}
-  return{say:"Hodně lidem v Brně jde o "+p.talk+". Chceme "+p.konkret+". Jak to vidíte vy?",talk:p.talk,avoid:p.avoid,personalized:false};}
+  return{say:"Hodně lidí v Brně řeší "+p.talk+". Chceme "+p.konkret+". Jak to vidíte vy?",talk:p.talk,avoid:p.avoid,personalized:false};}
 function ask(d){const e=engClean(d.eng);const warm=truthy(d.donor)||truthy(d.member);
   let say,tone;
   if(warm){
-    let primary=e==="high"?"pravidelným darem do voleb 339 Kč měsíčně – to je jako jedno předplatné streamovací služby jako je Netflix":e==="medium"?"pravidelným darem do voleb 199 Kč měsíčně":"jednorázovým darem 500 Kč";
-    say="Před komunálními volbami rozjíždíme kampaň naplno a stojíme čistě na darech od lidí. Proto se ptám napřímo – podpořil(a) byste nás "+primary+"? Pravidelná podpora nám dává jistotu, se kterou se dá kampaň naplánovat.";
+    let primary=e==="high"?"pravidelným darem do voleb 339 Kč měsíčně":e==="medium"?"pravidelným darem do voleb 199 Kč měsíčně":"jednorázovým darem 500 Kč";
+    let srovnani=e==="high"?" Je to zhruba jako jedno předplatné streamovací služby, třeba Netflixu.":"";
+    say="Před komunálními volbami rozjíždíme kampaň naplno a stojíme čistě na darech od lidí. Proto se ptám napřímo – podpořil(a) byste nás "+primary+"?"+srovnani+" Pravidelná podpora nám dává jistotu, se kterou se dá kampaň naplánovat.";
     tone="REAKTIVACE. Začni jedním číslem (ideálně měsíčním). Když souhlasí snadno, nadhoď vyšší tarif (599). Když zaváhá, nabídni nižší (199) nebo jednorázově. NEnabízej dvě čísla najednou.";}
   else if(truthy(d.dotaznik)){
-    let primary=e==="low"?"jednorázově třeba 300 Kč":"jednorázově 500 Kč – nebo ještě líp pravidelným darem do voleb 199 Kč měsíčně";
+    let primary=e==="low"?"jednorázovým darem třeba 300 Kč":"jednorázovým darem 500 Kč – nebo ještě lépe pravidelným darem do voleb 199 Kč měsíčně";
     say="Celou kampaň platíme z malých darů od lidí, kterým na Brně záleží. Pomohl(a) byste nám "+primary+"?";
     tone="PRVNÍ dar. Volbu nech na něm.";}
   else{
@@ -321,16 +323,16 @@ function showScript(id){curSel=id;render();const d=DATA.find(x=>x.id==id);
     <div class="step"><h3>2 · Napojení na téma</h3><div class="say">${M.say}</div><div class="hint">✅ Mluv o: ${M.talk}</div>${av}</div>
     <div class="step"><h3>3 · Prosba o dar</h3><div class="say">${A.say}</div><div class="hint">💡 ${A.tone}</div></div>
     <div class="step"><h3>4 · Uzávěr + odkaz</h3>
-      <div class="say"><b>ANO:</b> „Skvělé, moc děkuju! Pošlu vám odkaz hned teď, ať to máte snadno – chcete ho radši SMS, nebo na e‑mail?“</div>
+      <div class="say"><b>ANO:</b> „Skvělé, moc děkuju! Pošlu vám odkaz hned teď, ať to máte snadno – chcete ho radši na SMS, nebo na e‑mail?“</div>
       <div class="hint">🔁 <b>Pravidelný dar</b> (předplatné do voleb na lepší Brno): <b>lepsibrno.cz/?utm_source=telefon</b> — tarify 199 / 339 / 599 Kč měsíčně</div>
       <div class="hint">💸 <b>Jednorázový dar:</b> <b>dary.zeleni.cz/brno</b></div>
       <div class="hint">↳ Zopakuj, na čem jste se domluvili (částka, jednorázově/měsíčně) a odkaz pošli ideálně ještě během hovoru.</div>
-      <div class="hint"><b>NE:</b> „Naprosto chápu, díky za čas. Můžu vám odkaz poslat aspoň pro případ, že si to rozmyslíte?“ – netlač, vztah je důležitější.</div></div>
+      <div class="hint"><b>NE:</b> „Naprosto chápu, děkuji za váš čas. Můžu vám odkaz poslat aspoň pro případ, že si to rozmyslíte?“ – netlač, vztah je důležitější.</div></div>
     <details class="objs step"><summary>Časté námitky</summary>
-      <p><b>Teď nemůžu/nemám.</b> → Chápu, pošlu odkaz, přispějete až se hodí – i 200 Kč pomůže.</p>
-      <p><b>Na co to půjde?</b> → Na komunální kampaň v Brně – tisk, plakáty, akce. Žádní velcí sponzoři.</p>
-      <p><b>Vždyť jsem už dal(a).</b> → Já vím a děkuju! Tohle je o dalším daru před volbami – bez tlaku.</p>
-      <p><b>Kde máte moje číslo?</b> → Jste v naší databázi podporovatelů (dar v minulosti / dotazník). Když nechcete, hned to zařídím.</p>
+      <p><b>Teď nemůžu/nemám.</b> → Chápu. Pošlu vám odkaz a přispějete, až se vám to bude hodit – i 200 Kč pomůže.</p>
+      <p><b>Na co to půjde?</b> → Na komunální kampaň v Brně – tisk, plakáty, akce s lidmi. Nemáme velké sponzory, jedeme z příspěvků lidí.</p>
+      <p><b>Vždyť jsem už dal(a).</b> → Já vím a děkujeme! Tohle je o případném dalším daru před volbami – samozřejmě bez nátlaku.</p>
+      <p><b>Kde máte moje číslo?</b> → Jste v naší databázi podporovatelů – buď jste nás někdy podpořil(a), nebo jste nám dal(a) kontakt. Pokud nechcete, abychom volali, hned vás vyřadím.</p>
     </details>
     <div class="log">
       <button class="btn ok" onclick="logCall(${d.id},'přislíbil')">✓ Přislíbil</button>
