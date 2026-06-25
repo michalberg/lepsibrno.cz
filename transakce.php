@@ -85,12 +85,60 @@ $pdo  = donor_db();
 $rows = $pdo->query('SELECT * FROM donors ORDER BY created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
 // Jednorázové dary stažené z dary.zeleni.cz (mimo tabulku donors).
 $onetime = $pdo->query('SELECT * FROM onetime_synced ORDER BY dary_created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
+// Pravidelné dary založené přímo na dary.zeleni.cz (mimo lepsibrno.cz).
+// Patří k „předplatnému" → níže je slučujeme s tabulkou donors do součtů i výpisu.
+$recurring = $pdo->query('SELECT * FROM recurring_synced ORDER BY dary_created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
+
+// Sloučené „předplatné": řádky z donors (web) + pravidelné dary z dary.zeleni.cz,
+// normalizované do společného tvaru pro součty i výpis.
+$subs = [];
+foreach ($rows as $r) {
+    // Za kampaň počítáme jednotně pravidlem 15. dne (viz installments_until),
+    // ať Předplatné i tabulka Největší dárci ukazují u téhož dárce stejná čísla.
+    $amount = $r['amount'] !== null ? (int)$r['amount'] : null;
+    $months = installments_until((string)($r['created_at'] ?? ''), (string)$config['campaign_end']);
+    $subs[] = [
+        'date'     => (string)($r['created_at'] ?? ''),
+        'method'   => (string)($r['payment_method'] ?? ''),
+        'name'     => trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? '')),
+        'email'    => (string)($r['donor_email'] ?? ''),
+        'phone'    => (string)($r['donor_phone'] ?? ''),
+        'amount'   => $amount,
+        'months'   => $amount !== null ? $months : $r['months_left'],
+        'campaign' => $amount !== null ? $amount * $months : null,
+        'source'   => $r['utm_source'] ?: '(přímý / neznámý)',
+        'content'  => (string)($r['utm_content'] ?? ''),
+        'city'     => (string)($r['donor_city'] ?? ''),
+        'origin'   => 'web',
+    ];
+}
+foreach ($recurring as $r) {
+    // Měsíce do voleb počítáme jednotně pravidlem 15. dne (viz installments_until),
+    // ať Předplatné i tabulka Největší dárci ukazují stejné částky.
+    $amount    = $r['amount'] !== null ? (int)$r['amount'] : null;
+    $recMonths = installments_until((string)($r['dary_created_at'] ?? ''), (string)$config['campaign_end']);
+    $subs[] = [
+        'date'     => (string)($r['dary_created_at'] ?? ''),
+        'method'   => 'transfer',
+        'name'     => trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? '')),
+        'email'    => (string)($r['donor_email'] ?? ''),
+        'phone'    => (string)($r['donor_phone'] ?? ''),
+        'amount'   => $amount,
+        'months'   => $recMonths,
+        'campaign' => $amount !== null ? $amount * $recMonths : null,
+        'source'   => 'dary.zeleni.cz',
+        'content'  => '',
+        'city'     => (string)($r['donor_city'] ?? ''),
+        'origin'   => 'dary',
+    ];
+}
+usort($subs, fn($a, $b) => strcmp((string)$b['date'], (string)$a['date']));
 
 // ── CSV export ─────────────────────────────────────────────────────────────
 if (isset($_GET['export'])) {
     $which = $_GET['export'];
-    $data  = $which === 'onetime' ? $onetime : $rows;
-    $name  = $which === 'onetime' ? 'jednorazove' : 'transakce';
+    $data  = ['onetime' => $onetime, 'recurring' => $recurring][$which] ?? $rows;
+    $name  = ['onetime' => 'jednorazove', 'recurring' => 'pravidelne'][$which] ?? 'transakce';
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $name . '-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
@@ -107,29 +155,123 @@ if (isset($_GET['export'])) {
 $onetimeCount = count($onetime);
 $onetimeSum   = array_sum(array_map(fn($r) => (int)($r['amount'] ?? 0), $onetime));
 
-// ── Souhrny ──────────────────────────────────────────────────────────────
-$count          = count($rows);
+// ── Souhrny předplatného (donors + pravidelné z dary.zeleni.cz) ────────────
+$count          = count($subs);
+$recurringCount = count($recurring);
 $sumMonthly     = 0;   // součet měsíčních částek
 $sumCampaign    = 0;   // součet celkových darů za kampaň
-$byStatus       = [];  // status => ['count' => n, 'monthly' => Kč]
-$bySource       = [];  // utm_source => ['count' => n, 'monthly' => Kč, 'campaign' => Kč]
+$bySource       = [];  // zdroj => ['count' => n, 'monthly' => Kč, 'campaign' => Kč]
+$byMonth        = [];  // YYYY-MM zadání => ['count' => n, 'monthly' => Kč]
+$cardCampaign   = 0;   // součet za kampaň jen u plateb kartou (pro výpočet poplatku)
 
-foreach ($rows as $r) {
-    $amount   = (int)($r['amount'] ?? 0);
-    $campaign = (int)($r['total_campaign'] ?? 0);
+foreach ($subs as $s) {
+    $amount   = (int)($s['amount'] ?? 0);
+    $campaign = (int)($s['campaign'] ?? 0);
     $sumMonthly  += $amount;
     $sumCampaign += $campaign;
+    if ($s['method'] === 'card') { $cardCampaign += $campaign; }
 
-    $st = $r['status'] ?: '—';
-    $byStatus[$st]['count']   = ($byStatus[$st]['count']   ?? 0) + 1;
-    $byStatus[$st]['monthly'] = ($byStatus[$st]['monthly'] ?? 0) + $amount;
-
-    $src = $r['utm_source'] ?: '(přímý / neznámý)';
+    $src = $s['source'];
     $bySource[$src]['count']    = ($bySource[$src]['count']    ?? 0) + 1;
     $bySource[$src]['monthly']  = ($bySource[$src]['monthly']  ?? 0) + $amount;
     $bySource[$src]['campaign'] = ($bySource[$src]['campaign'] ?? 0) + $campaign;
+
+    $ym = substr((string)$s['date'], 0, 7) ?: '—'; // měsíc zadání předplatného
+    $byMonth[$ym]['count']   = ($byMonth[$ym]['count']   ?? 0) + 1;
+    $byMonth[$ym]['monthly'] = ($byMonth[$ym]['monthly'] ?? 0) + $amount;
 }
 uasort($bySource, fn($a, $b) => $b['count'] <=> $a['count']); // nejsilnější zdroje navrch
+krsort($byMonth); // nejnovější měsíc navrch
+
+// Poplatek za platby kartou (~3,1 %) — o tuto částku je čistý příjem z karet nižší.
+$cardFeeRate = 0.031;
+$cardFee     = (int)round($cardCampaign * $cardFeeRate);
+
+// Počet měsíčních plateb od zadání daru do daného data. Měsíc zadání se počítá,
+// jen pokud byl dar zadán do 15. dne (jinak první platba spadá až do dalšího měsíce).
+function installments_until(string $createdAt, string $untilYmd): int {
+    try {
+        $from  = new DateTimeImmutable(substr($createdAt, 0, 10));
+        $until = new DateTimeImmutable(substr($untilYmd, 0, 10));
+    } catch (Throwable $e) {
+        return 0;
+    }
+    $cursor = (int)$from->format('j') <= 15
+        ? $from->modify('first day of this month')
+        : $from->modify('first day of next month');
+    $count = 0;
+    while ($cursor <= $until) {
+        $count++;
+        $cursor = $cursor->modify('first day of next month');
+    }
+    return $count;
+}
+
+// Počet už proběhlých plateb k danému dni — podle SKUTEČNÉHO data (výročí dne
+// zadání). Používá se pro „Již došlo" (realizované platby), kde nehraje roli
+// pravidlo 15. dne — to platí jen pro očekávané platby do konce kampaně.
+function installments_by_date(string $createdAt, string $untilYmd): int {
+    try {
+        $from  = new DateTimeImmutable(substr($createdAt, 0, 10));
+        $until = new DateTimeImmutable(substr($untilYmd, 0, 10));
+    } catch (Throwable $e) {
+        return 0;
+    }
+    if ($from > $until) return 0;
+    $count  = 0;
+    $cursor = $from;
+    while ($cursor <= $until) {
+        $count++;
+        $cursor = $cursor->modify('+1 month');
+    }
+    return $count;
+}
+
+// ── „Již došlo" — realizováno k dnešnímu dni ────────────────────────────────
+// Jednorázové dary celé; pravidelné a předplatné měsíční částkou × počet plateb,
+// které už reálně proběhly (podle data zadání, ne pravidla 15.).
+$today     = date('Y-m-d');
+$alreadyIn = $onetimeSum;
+foreach ($rows as $r) {
+    $alreadyIn += (int)($r['amount'] ?? 0) * installments_by_date((string)$r['created_at'], $today);
+}
+foreach ($recurring as $r) {
+    $alreadyIn += (int)($r['amount'] ?? 0) * installments_by_date((string)$r['dary_created_at'], $today);
+}
+
+// ── Největší dárci ──────────────────────────────────────────────────────────
+// Sloučeno dle jména+příjmení napříč jednorázovými i pravidelnými dary.
+// Pravidelné se počítají měsíční částkou × počet plateb od zadání do voleb.
+$campaignEnd = (string)$config['campaign_end'];
+$topDonors   = []; // key => ['name' => ..., 'onetime' => Kč, 'recurring' => Kč]
+
+function donor_key(string $name, string $surname): string {
+    return mb_strtolower(trim($name)) . '|' . mb_strtolower(trim($surname));
+}
+function topdonor_add(array &$top, string $name, string $surname, int $onetime, int $recurring): void {
+    $key = donor_key($name, $surname);
+    if ($key === '|') return; // bez jména přeskoč
+    if (!isset($top[$key])) {
+        $top[$key] = ['name' => trim($name . ' ' . $surname), 'onetime' => 0, 'recurring' => 0];
+    }
+    $top[$key]['onetime']   += $onetime;
+    $top[$key]['recurring'] += $recurring;
+}
+
+foreach ($onetime as $r) {
+    topdonor_add($topDonors, (string)$r['donor_name'], (string)$r['donor_surname'], (int)($r['amount'] ?? 0), 0);
+}
+foreach ($rows as $r) { // předplatné z lepsibrno.cz (donors)
+    $rec = (int)($r['amount'] ?? 0) * installments_until((string)$r['created_at'], $campaignEnd);
+    topdonor_add($topDonors, (string)$r['donor_name'], (string)$r['donor_surname'], 0, $rec);
+}
+foreach ($recurring as $r) { // pravidelné přímo z dary.zeleni.cz
+    $rec = (int)($r['amount'] ?? 0) * installments_until((string)$r['dary_created_at'], $campaignEnd);
+    topdonor_add($topDonors, (string)$r['donor_name'], (string)$r['donor_surname'], 0, $rec);
+}
+foreach ($topDonors as &$d) { $d['total'] = $d['onetime'] + $d['recurring']; }
+unset($d);
+uasort($topDonors, fn($a, $b) => $b['total'] <=> $a['total']);
 
 function status_label(string $s): string {
     return [
@@ -213,21 +355,32 @@ function render_login(string $error, bool $notConfigured): void {
   <header>
     <h1>Informace o darech</h1>
     <div class="actions">
+      <a class="ghost" href="telefundraising.php">📞 Telefundraising</a>
       <a class="primary" href="transakce.php?export=csv">⬇ Předplatné CSV</a>
+      <?php if ($recurringCount): ?><a class="primary" href="transakce.php?export=recurring">⬇ Pravidelné (dary.zeleni.cz) CSV</a><?php endif; ?>
       <?php if ($onetimeCount): ?><a class="primary" href="transakce.php?export=onetime">⬇ Jednorázové CSV</a><?php endif; ?>
       <a class="ghost" href="transakce.php?logout=1">Odhlásit</a>
     </div>
   </header>
 
   <div class="cards">
-    <div class="card"><div class="label">Předplatných</div><div class="value"><?= $count ?></div></div>
+    <div class="card">
+      <div class="label">Předplatných</div>
+      <div class="value"><?= $count ?></div>
+      <?php if ($recurringCount): ?><div class="muted" style="font-size:.8rem;margin-top:.25rem"><?= $recurringCount ?> mimo lepsibrno.cz</div><?php endif; ?>
+    </div>
     <div class="card"><div class="label">Měsíčně celkem</div><div class="value"><?= kc($sumMonthly) ?></div></div>
     <div class="card"><div class="label">Za kampaň celkem</div><div class="value"><?= kc($sumCampaign) ?></div></div>
     <?php if ($onetimeCount): ?>
       <div class="card"><div class="label">Jednorázových darů</div><div class="value"><?= $onetimeCount ?></div></div>
       <div class="card"><div class="label">Jednorázové celkem</div><div class="value"><?= kc($onetimeSum) ?></div></div>
     <?php endif; ?>
-    <div class="card"><div class="label">Za kampaň očekávané</div><div class="value"><?= kc($sumCampaign + $onetimeSum) ?></div></div>
+    <div class="card">
+      <div class="label">Za kampaň očekávané</div>
+      <div class="value"><?= kc($sumCampaign + $onetimeSum) ?></div>
+      <div class="muted" style="font-size:.8rem;margin-top:.25rem">Již došlo: <?= kc($alreadyIn) ?></div>
+      <div class="muted" style="font-size:.8rem;margin-top:.15rem">Poplatek za kartu (3,1 %): −<?= kc($cardFee) ?></div>
+    </div>
   </div>
 
   <h2>Předplatné <span class="muted">(<?= $count ?>)</span></h2>
@@ -249,8 +402,15 @@ function render_login(string $error, bool $notConfigured): void {
     </table>
   </div>
 
-  <h3 style="font-size:.95rem;margin:1.5rem 0 .6rem;color:var(--muted)">Všechna předplatné</h3>
-  <?php if (!$rows): ?>
+  <p class="muted" style="font-size:.85rem;margin:1.5rem 0 .4rem">
+    Zadáno podle měsíce (měsíční výše předplatných) — kvůli matchingu:
+    <?php foreach ($byMonth as $ym => $d): ?>
+      <span style="display:inline-block;margin-right:1rem"><strong><?= h($ym) ?></strong>: <?= $d['count'] ?>× / <?= kc($d['monthly']) ?></span>
+    <?php endforeach; ?>
+  </p>
+
+  <h3 style="font-size:.95rem;margin:.4rem 0 .6rem;color:var(--muted)">Všechna předplatné <span class="muted">(včetně pravidelných z dary.zeleni.cz)</span></h3>
+  <?php if (!$subs): ?>
     <div class="empty">Zatím žádné záznamy.</div>
   <?php else: ?>
   <div class="scroll">
@@ -261,23 +421,24 @@ function render_login(string $error, bool $notConfigured): void {
         <th>Source</th><th>Content</th><th>Město</th>
       </tr></thead>
       <tbody>
-      <?php foreach ($rows as $r):
-        $m = (string)($r['payment_method'] ?? '');
+      <?php foreach ($subs as $s):
+        $m = $s['method'];
         $micon  = $m === 'card' ? '💳' : ($m === 'transfer' ? '🏦' : '•');
         $mlabel = $m === 'card' ? 'Karta' : ($m === 'transfer' ? 'Převod' : $m);
+        if ($s['origin'] === 'dary') { $mlabel .= ' · dary.zeleni.cz'; }
       ?>
         <tr>
-          <td class="muted"><?= h($r['created_at']) ?></td>
+          <td class="muted"><?= h($s['date']) ?></td>
           <td style="text-align:center" title="<?= h($mlabel) ?>"><?= $micon ?></td>
-          <td><?= h(trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? ''))) ?></td>
-          <td><?= h($r['donor_email']) ?></td>
-          <td><?= h($r['donor_phone']) ?></td>
-          <td class="num"><?= $r['amount'] !== null ? kc((int)$r['amount']) : '—' ?></td>
-          <td class="num"><?= h($r['months_left']) ?></td>
-          <td class="num"><?= $r['total_campaign'] !== null ? kc((int)$r['total_campaign']) : '—' ?></td>
-          <td><?= h($r['utm_source']) ?></td>
-          <td><?= h($r['utm_content']) ?></td>
-          <td><?= h($r['donor_city']) ?></td>
+          <td><?= h($s['name']) ?></td>
+          <td><?= h($s['email']) ?></td>
+          <td><?= h($s['phone']) ?></td>
+          <td class="num"><?= $s['amount'] !== null ? kc((int)$s['amount']) : '—' ?></td>
+          <td class="num"><?= h((string)$s['months']) ?></td>
+          <td class="num"><?= $s['campaign'] !== null ? kc((int)$s['campaign']) : '—' ?></td>
+          <td><?= h((string)$s['source']) ?></td>
+          <td><?= h($s['content']) ?></td>
+          <td><?= h($s['city']) ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
@@ -306,6 +467,29 @@ function render_login(string $error, bool $notConfigured): void {
           <td><?= h($r['vs']) ?></td>
           <td><?= h($r['donor_city']) ?></td>
           <td class="muted"><?= h(substr((string)$r['synced_at'], 0, 10)) ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php endif; ?>
+
+  <h2>Největší dárci <span class="muted">(jednorázové + pravidelné do voleb, dle jména)</span></h2>
+  <?php if (!$topDonors): ?>
+    <div class="empty">Zatím žádní dárci.</div>
+  <?php else: ?>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th>Dárce</th><th class="num">Jednorázově</th><th class="num">Pravidelně do voleb</th><th class="num">Celkem</th>
+      </tr></thead>
+      <tbody>
+      <?php foreach ($topDonors as $d): ?>
+        <tr>
+          <td><?= h($d['name']) ?></td>
+          <td class="num"><?= $d['onetime'] ? kc($d['onetime']) : '—' ?></td>
+          <td class="num"><?= $d['recurring'] ? kc($d['recurring']) : '—' ?></td>
+          <td class="num"><strong><?= kc($d['total']) ?></strong></td>
         </tr>
       <?php endforeach; ?>
       </tbody>

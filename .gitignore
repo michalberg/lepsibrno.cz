@@ -15,3 +15,8 @@ donors.db
 donors.db-journal
 donors.db-wal
 donors.db-shm
+telefundraising.db
+telefundraising.db-journal
+telefundraising.db-wal
+telefundraising.db-shm
+telefundraising_seed.json
