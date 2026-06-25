@@ -159,6 +159,7 @@ tf_db(); // zajisti schema + seed při prvním vstupu
   .eg{font-size:11px;padding:1px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
   .eg-h{background:#e7f6ed;color:#1f8f4e}.eg-m{background:#fdf1e0;color:#9a6712}.eg-l{background:#eef1f5;color:#6a7686}
   .pcell{cursor:help;border-bottom:1px dotted #9fb0c0}
+  #ptip{position:fixed;z-index:50;max-width:300px;background:#1a2230;color:#fff;padding:9px 11px;border-radius:8px;font-size:12.5px;line-height:1.45;box-shadow:0 6px 22px rgba(0,0,0,.28);pointer-events:none;display:none}
   .scr{padding:16px;position:sticky;top:14px}
   .scr .who{font-size:20px;font-weight:800}
   .scr .meta{color:var(--mut);font-size:13px;margin:2px 0 6px}
@@ -183,6 +184,7 @@ tf_db(); // zajisti schema + seed při prvním vstupu
 </style>
 </head>
 <body>
+<div id="ptip"></div>
 <header>
   <h1>📞 Telefundraising</h1>
   <span class="stat" id="stat">Načítám…</span>
@@ -293,11 +295,11 @@ function render(){
     if(typeof va==='string'){va=va.toLowerCase();vb=(vb||'').toLowerCase();}return(va>vb?1:va<vb?-1:0)*curDir;});
   document.getElementById('tb').innerHTML=list.map(d=>`<tr data-id="${d.id}" class="${curSel==d.id?'sel':''} ${d.result?'done':''}">
     <td><span class="pr ${d.prio}">${d.prio}</span></td>
-    <td>${d.jmeno}${d.result?' <span class="tag">'+d.result+(d.caller?' · '+d.caller:'')+'</span>':''}</td>
+    <td>${d.jmeno}${d.result?' <span class="tag">'+d.result+(d.note?' – '+d.note:'')+(d.caller?' · '+d.caller:'')+'</span>':''}</td>
     <td>${d.score}</td><td>${vztahLabel(d)}</td>
     <td style="text-align:center">${truthy(d.dotaznik)?'✓':'<span class="tag">ne</span>'}</td>
     <td>${engBadge(d.eng)}</td>
-    <td>${d.persona?'<span class="pcell" title="'+pdesc(d.persona)+'">'+d.persona+'</span>':'<span class="tag">—</span>'}</td>
+    <td>${d.persona?'<span class="pcell" data-desc="'+pdesc(d.persona).replace(/"/g,'&quot;')+'">'+d.persona+'</span>':'<span class="tag">—</span>'}</td>
     <td>${d.mesto}</td></tr>`).join('');
   const done=DATA.filter(d=>d.result).length;
   document.getElementById('stat').textContent=list.length+" zobrazeno · "+done+" zpracováno · "+DATA.length+" celkem";
@@ -355,6 +357,16 @@ document.getElementById('q').addEventListener('input',render);
 document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');curFilter=c.dataset.f;render();});
 document.querySelectorAll('th').forEach(t=>t.onclick=()=>{const s=t.dataset.s;if(s===curSort)curDir*=-1;else{curSort=s;curDir=(s==='jmeno'||s==='mesto'||s==='persona')?1:-1;}render();});
 document.getElementById('tb').addEventListener('click',e=>{const tr=e.target.closest('tr');if(tr)showScript(+tr.dataset.id);});
+// plovoucí tooltip s popisem persony (spolehlivější než nativní title)
+(function(){const tip=document.getElementById('ptip');const tb=document.getElementById('tb');
+  tb.addEventListener('mouseover',e=>{const el=e.target.closest('.pcell');if(!el)return;
+    const t=el.getAttribute('data-desc');if(!t)return;
+    tip.textContent=t;tip.style.display='block';
+    const r=el.getBoundingClientRect();
+    tip.style.left=Math.max(8,Math.min(r.left,window.innerWidth-310))+'px';
+    tip.style.top=(r.bottom+6>window.innerHeight-90?r.top-tip.offsetHeight-6:r.bottom+6)+'px';});
+  tb.addEventListener('mouseout',e=>{if(e.target.closest('.pcell'))tip.style.display='none';});
+})();
 load();
 </script>
 </body></html>
