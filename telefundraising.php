@@ -225,15 +225,13 @@ function engBadge(e){const c=engClean(e);const cls=c==="high"?"eg-h":c==="medium
 const truthy=v=>v==1||v===true||v==="1";
 function vztahLabel(d){const dn=truthy(d.donor),m=truthy(d.member);return dn&&m?"dárce + člen":m?"člen":dn?"dříve dárce":"kontakt";}
 function engClean(e){return (e||"").replace(/\s*\(.*\)/,"");}
-function intro(d){const past=truthy(d.donor),mem=truthy(d.member),dot=truthy(d.dotaznik);
-  if(mem){let s="Dobrý den, tady "+ME+" z brněnských Zelených. Volám vám jako našemu člen(ce) – díky, že jste s námi.";
-    if(past)s="Dobrý den, tady "+ME+" z brněnských Zelených. Volám vám jako našemu člen(ce) – a vím, že jste nás i finančně podpořil(a). Díky, že jste s námi.";
-    if(dot)s+=" Navíc jste si nedávno udělal(a) čas na náš dotazník o Brně.";
-    return{say:s+" Máte chvilku?",tone:"Nejvřelejší – jsme jeden tým. Mluv sebevědomě."};}
-  if(past){if(dot)return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Volám hlavně poděkovat – podpořil(a) jste nás v minulosti a teď jste si ještě udělal(a) čas na náš dotazník o Brně. Moc si toho vážíme. Máte teď chvilku?",tone:"Nejteplejší. Nejdřív upřímně poděkuj, pak teprve k věci – partnersky."};
-    return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Volám hlavně poděkovat – v minulosti jste nás podpořil(a) a tehdy nám to moc pomohlo. Máte dvě minutky?",tone:"Navazuješ na starou důvěru. Cíl: reaktivace."};}
-  if(dot)return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Volám hlavně poděkovat – udělal(a) jste si čas na náš dotazník o Brně, sešlo se přes 1 161 odpovědí. Máte teď chvilku?",tone:"Zapojený, nikdy nedaroval. Přes téma z dotazníku → PRVNÍ dar."};
-  return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Obracím se na lidi, kterým záleží na Brně, a vy jste mezi nimi. Máte chvilku?",tone:"Nejstudenější. Hlavně navázat vztah, žádný tlak."};}
+function intro(d){const past=truthy(d.donor),mem=truthy(d.member);
+  if(mem){
+    let s="Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme našim lidem – a vy jste náš člen(ka), tak volám rovnou vám.";
+    if(past)s="Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme našim lidem – jste náš člen(ka) a v minulosti jste nás i podpořil(a), za což díky. Tak volám rovnou vám.";
+    return{say:s+" Máte teď chvilku?",tone:"Nejvřelejší – jsme jeden tým. Důvod hovoru je kampaň; členství/dar zmiň jen jako proč voláš jemu."};}
+  if(past)return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme lidem, kteří nám fandí – vy jste nás v minulosti podpořil(a), za což díky, tak volám rovnou vám. Máte teď chvilku?",tone:"Reaktivace. Důvod = kampaň; dřívější dar je jen reference, proč voláš právě jemu (+ krátké díky). Po hovoru nech mluvit jeho."};
+  return{say:"Dobrý den, tady "+ME+" z brněnských Zelených. Před komunálními volbami se ozýváme Brňanům, kterým není jedno, jak město vypadá – a vy jste mezi nimi. Máte teď chvilku?",tone:"Důvod = kampaň. Dotazník NEzmiňuj; jeho téma použij přirozeně až v dalším kroku."};}
 // téma z dotazníku → konkrétní závazek z programu (aby „co chceme prosadit“ sedělo na jeho prioritu)
 const TEMA={
  "bydlení":"opravit přes 1 500 prázdných obecních bytů a udělat z bydlení jasnou prioritu města",
@@ -249,9 +247,9 @@ function middle(d){const p=PERSONA[d.persona]??PERSONA[""];
   if(truthy(d.dotaznik)&&d.t1){
     const temata="„"+d.t1+"“"+(d.t2?" a „"+d.t2+"“":"");
     const k=TEMA[d.t1];
-    const say="U vás v dotazníku vyšla jako priorita "+temata+". "+(k?"Přesně na to se chceme zaměřit – chceme "+k+".":"Přesně na tyhle věci se v komunálních volbách chceme zaměřit.")+" Sedí to i s tím, co vás v Brně nejvíc trápí?";
-    return{say,talk:"jeho vlastní priority z dotazníku ("+d.t1+(d.t2?", "+d.t2:"")+")",avoid:"",personalized:true};}
-  return{say:"Hodně lidem jako vám jde hlavně o "+p.talk+". Přesně to chceme prosadit – "+p.konkret+".",talk:p.talk,avoid:p.avoid,personalized:false};}
+    const say="Jedno z témat, které v Brně teď hodně řešíme, je "+d.t1+(d.t2?" a "+d.t2:"")+". "+(k?"Chceme "+k+".":"Přesně na tyhle věci se chceme zaměřit.")+" Je to něco, co vnímáte i vy?";
+    return{say,talk:"jeho priority: "+d.t1+(d.t2?", "+d.t2:"")+" – použij jako přirozené téma, dotazník nezmiňuj",avoid:"",personalized:true};}
+  return{say:"Hodně lidem v Brně jde o "+p.talk+". Chceme "+p.konkret+". Jak to vidíte vy?",talk:p.talk,avoid:p.avoid,personalized:false};}
 function ask(d){const e=engClean(d.eng);const warm=truthy(d.donor)||truthy(d.member);
   let say,tone;
   if(warm){
