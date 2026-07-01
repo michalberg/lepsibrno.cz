@@ -81,6 +81,15 @@ if (!is_logged_in($adminPassword)) {
 
 // ── Od sem dál je uživatel přihlášený ──────────────────────────────────────
 
+// ── Smazání záznamu ────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $id = (int)$_POST['delete_id'];
+    donor_db()->prepare('DELETE FROM donors WHERE id = ?')->execute([$id]);
+    update_matching_status();
+    header('Location: transakce.php');
+    exit;
+}
+
 $pdo  = donor_db();
 $rows = $pdo->query('SELECT * FROM donors ORDER BY created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
 // Jednorázové dary stažené z dary.zeleni.cz (mimo tabulku donors).
@@ -98,6 +107,7 @@ foreach ($rows as $r) {
     $amount = $r['amount'] !== null ? (int)$r['amount'] : null;
     $months = installments_until((string)($r['created_at'] ?? ''), (string)$config['campaign_end']);
     $subs[] = [
+        'id'       => (int)$r['id'],
         'date'     => (string)($r['created_at'] ?? ''),
         'method'   => (string)($r['payment_method'] ?? ''),
         'name'     => trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? '')),
@@ -418,7 +428,7 @@ function render_login(string $error, bool $notConfigured): void {
       <thead><tr>
         <th>Datum</th><th>Metoda</th><th>Jméno</th><th>E-mail</th><th>Telefon</th>
         <th class="num">Měsíčně</th><th class="num">Měsíců</th><th class="num">Za kampaň</th>
-        <th>Source</th><th>Content</th><th>Město</th>
+        <th>Source</th><th>Content</th><th>Město</th><th></th>
       </tr></thead>
       <tbody>
       <?php foreach ($subs as $s):
@@ -439,6 +449,12 @@ function render_login(string $error, bool $notConfigured): void {
           <td><?= h((string)$s['source']) ?></td>
           <td><?= h($s['content']) ?></td>
           <td><?= h($s['city']) ?></td>
+          <td><?php if ($s['origin'] === 'web'): ?>
+            <form method="post" style="margin:0" onsubmit="return confirm('Smazat záznam <?= h($s['name']) ?> (<?= h($s['email']) ?>)?')">
+              <input type="hidden" name="delete_id" value="<?= (int)$s['id'] ?>">
+              <button type="submit" style="background:none;border:1px solid #e0a0a0;color:#c62828;border-radius:5px;padding:.2rem .5rem;cursor:pointer;font-size:.8rem" title="Smazat záznam">×</button>
+            </form>
+          <?php endif; ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
