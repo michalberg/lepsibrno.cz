@@ -98,6 +98,20 @@ $onetime = $pdo->query('SELECT * FROM onetime_synced ORDER BY dary_created_at DE
 // Patří k „předplatnému" → níže je slučujeme s tabulkou donors do součtů i výpisu.
 $recurring = $pdo->query('SELECT * FROM recurring_synced ORDER BY dary_created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
 
+// ── Porovnání s telefundraisingem ───────────────────────────────────────────
+// Shoda jména+příjmení s kontakty z telefundraising.php se NEpočítá tady —
+// jen čte sloupec tf_match, který přepočítává refresh_telefundraising_matches()
+// jednou denně ze sync-onetime.php (a jednorázově teď při nasazení). Ať admin
+// stránka zůstane rychlá a nesahá při každém načtení na telefundraising.db.
+$onetimeTfCount = 0;
+$onetimeTfSum   = 0;
+foreach ($onetime as $r) {
+    if (!empty($r['tf_match'])) {
+        $onetimeTfCount++;
+        $onetimeTfSum += (int)($r['amount'] ?? 0);
+    }
+}
+
 // Sloučené „předplatné": řádky z donors (web) + pravidelné dary z dary.zeleni.cz,
 // normalizované do společného tvaru pro součty i výpis.
 $subs = [];
@@ -106,6 +120,11 @@ foreach ($rows as $r) {
     // ať Předplatné i tabulka Největší dárci ukazují u téhož dárce stejná čísla.
     $amount = $r['amount'] !== null ? (int)$r['amount'] : null;
     $months = installments_until((string)($r['created_at'] ?? ''), (string)$config['campaign_end']);
+    $utmSource = trim((string)($r['utm_source'] ?? ''));
+    // Pravidelný dar bez UTM zdroje, jehož jméno sedí na kontakt z telefundraisingu
+    // (sloupec tf_match, viz refresh_telefundraising_matches), připíšeme jako
+    // zdroj „telefundraising".
+    $isTf = $utmSource === '' && !empty($r['tf_match']);
     $subs[] = [
         'id'       => (int)$r['id'],
         'date'     => (string)($r['created_at'] ?? ''),
@@ -116,7 +135,7 @@ foreach ($rows as $r) {
         'amount'   => $amount,
         'months'   => $amount !== null ? $months : $r['months_left'],
         'campaign' => $amount !== null ? $amount * $months : null,
-        'source'   => $r['utm_source'] ?: '(přímý / neznámý)',
+        'source'   => $isTf ? 'telefundraising' : ($utmSource !== '' ? $utmSource : '(přímý / neznámý)'),
         'content'  => (string)($r['utm_content'] ?? ''),
         'city'     => (string)($r['donor_city'] ?? ''),
         'origin'   => 'web',
@@ -127,6 +146,9 @@ foreach ($recurring as $r) {
     // ať Předplatné i tabulka Největší dárci ukazují stejné částky.
     $amount    = $r['amount'] !== null ? (int)$r['amount'] : null;
     $recMonths = installments_until((string)($r['dary_created_at'] ?? ''), (string)$config['campaign_end']);
+    // Přímé platby na dary.zeleni.cz nemají UTM zdroj vůbec, takže tu podmínka
+    // „nemá žádný utm_source" platí vždy — stačí shoda jména (sloupec tf_match).
+    $isTf = !empty($r['tf_match']);
     $subs[] = [
         'date'     => (string)($r['dary_created_at'] ?? ''),
         'method'   => 'transfer',
@@ -136,7 +158,7 @@ foreach ($recurring as $r) {
         'amount'   => $amount,
         'months'   => $recMonths,
         'campaign' => $amount !== null ? $amount * $recMonths : null,
-        'source'   => 'dary.zeleni.cz',
+        'source'   => $isTf ? 'telefundraising' : 'dary.zeleni.cz',
         'content'  => '',
         'city'     => (string)($r['donor_city'] ?? ''),
         'origin'   => 'dary',
@@ -463,6 +485,9 @@ function render_login(string $error, bool $notConfigured): void {
   <?php endif; ?>
 
   <h2>Jednorázové dary <span class="muted">(z dary.zeleni.cz)</span></h2>
+  <?php if ($onetimeTfCount): ?>
+    <p class="muted" style="font-size:.85rem;margin:.2rem 0 1rem">📞 Telefundraising (shoda jména s telefundraising.php): <?= $onetimeTfCount ?>× / <?= kc($onetimeTfSum) ?></p>
+  <?php endif; ?>
   <?php if (!$onetime): ?>
     <div class="empty">Zatím žádné jednorázové dary. Naplní je <code>sync-onetime.php</code> při běhu cronu.</div>
   <?php else: ?>
@@ -476,7 +501,7 @@ function render_login(string $error, bool $notConfigured): void {
       <?php foreach ($onetime as $r): ?>
         <tr>
           <td class="muted"><?= h(substr((string)$r['dary_created_at'], 0, 10)) ?></td>
-          <td><?= h(trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? ''))) ?></td>
+          <td><?= h(trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? ''))) ?><?php if (!empty($r['tf_match'])): ?> <span title="Jméno sedí na kontakt z telefundraisingu">📞</span><?php endif; ?></td>
           <td><?= h($r['donor_email']) ?></td>
           <td><?= h($r['donor_phone']) ?></td>
           <td class="num"><?= $r['amount'] !== null ? kc((int)$r['amount']) : '—' ?></td>

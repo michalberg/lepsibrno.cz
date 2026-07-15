@@ -73,6 +73,34 @@ function donor_db(): PDO {
         )
     ");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_onetime_created ON onetime_synced(dary_created_at)");
+    // Evidence PRAVIDELNÝCH darů založených PŘÍMO na dary.zeleni.cz (mimo lepsibrno.cz).
+    // Rozlišujeme je dle periodicity: dary z lepsibrno.cz mají 'monthly', přímé 'month'.
+    // payment_id = _id platby z dary API → zabrání opakovanému odeslání do AN.
+    // Drží i přepočet na kampaň (months_left, total_campaign), aby šly započítat
+    // do součtů „předplatného" v transakce.php (stejně jako řádky tabulky donors).
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS recurring_synced (
+            payment_id      TEXT PRIMARY KEY,
+            synced_at       TEXT NOT NULL DEFAULT (datetime('now')),
+            dary_created_at TEXT,
+            donor_name      TEXT,
+            donor_surname   TEXT,
+            donor_email     TEXT,
+            donor_phone     TEXT,
+            donor_city      TEXT,
+            amount          INTEGER,
+            months_left     INTEGER,
+            total_campaign  INTEGER,
+            vs              TEXT,
+            status          TEXT
+        )
+    ");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_recurring_created ON recurring_synced(dary_created_at)");
+    // Shoda se seznamem telefundraisingu (viz refresh_telefundraising_matches) —
+    // sloupec musí existovat hned, i než poprvé proběhne přepočet.
+    foreach (['donors', 'onetime_synced', 'recurring_synced'] as $table) {
+        ensure_column($pdo, $table, 'tf_match', 'INTEGER NOT NULL DEFAULT 0');
+    }
     return $pdo;
 }
 
@@ -129,5 +157,66 @@ function update_matching_status(): void {
         file_put_contents(__DIR__ . '/matching-status.json', $payload, LOCK_EX);
     } catch (Throwable $e) {
         error_log('update_matching_status error: ' . $e->getMessage());
+    }
+}
+
+/** Normalizace jména pro porovnání napříč tabulkami (lowercase, sjednocené mezery). */
+function normalize_donor_name(string $s): string {
+    $s = preg_replace('/\s+/', ' ', trim($s)) ?? '';
+    return mb_strtolower($s, 'UTF-8');
+}
+
+/**
+ * Set normalizovaných jmen (jméno+příjmení) z telefundraising.db — kontakty,
+ * které byly/budou telefonicky osloveny. Soubor leží mimo webroot vedle
+ * donors.db; pokud neexistuje (telefundraising.php ještě nebyl spuštěn),
+ * vrací prázdné pole.
+ */
+function telefundraising_name_set(): array {
+    $path = __DIR__ . '/../telefundraising.db';
+    if (!is_readable($path)) return [];
+    try {
+        $db = new PDO('sqlite:' . $path);
+        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $rows = $db->query('SELECT jmeno FROM tf_contacts')->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Throwable $e) {
+        return [];
+    }
+    $set = [];
+    foreach ($rows as $jmeno) {
+        $key = normalize_donor_name((string)$jmeno);
+        if ($key !== '') $set[$key] = true;
+    }
+    return $set;
+}
+
+/** Přidá sloupec do tabulky, pokud tam ještě není (kvůli existujícím DB souborům). */
+function ensure_column(PDO $pdo, string $table, string $column, string $type): void {
+    $names = $pdo->query("PRAGMA table_info($table)")->fetchAll(PDO::FETCH_COLUMN, 1);
+    if (!in_array($column, $names, true)) {
+        $pdo->exec("ALTER TABLE $table ADD COLUMN $column $type");
+    }
+}
+
+/**
+ * Přepočte shodu jména+příjmení se seznamem z telefundraising.db a uloží ji
+ * do sloupce tf_match (donors / onetime_synced / recurring_synced). Volá se
+ * ze sync-onetime.php po každém běhu cronu (jednou denně) — NE při každém
+ * načtení transakce.php, ať admin stránka zůstává rychlá a nesahá zbytečně
+ * na telefundraising.db.
+ */
+function refresh_telefundraising_matches(): void {
+    $pdo   = donor_db(); // mj. zajistí sloupec tf_match, viz výše
+    $names = telefundraising_name_set();
+    foreach (['donors', 'onetime_synced', 'recurring_synced'] as $table) {
+        // "AS rid": donors má INTEGER PRIMARY KEY (id), takže SQLite by "rowid"
+        // ve výstupu přejmenovalo na "id" — alias sjednotí název napříč tabulkami.
+        $rows = $pdo->query("SELECT rowid AS rid, donor_name, donor_surname FROM $table")->fetchAll(PDO::FETCH_ASSOC);
+        $upd  = $pdo->prepare("UPDATE $table SET tf_match = :m WHERE rowid = :id");
+        foreach ($rows as $r) {
+            $key   = normalize_donor_name(trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? '')));
+            $match = isset($names[$key]) ? 1 : 0;
+            $upd->execute([':m' => $match, ':id' => $r['rid']]);
+        }
     }
 }
