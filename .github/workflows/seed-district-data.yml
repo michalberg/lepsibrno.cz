@@ -1,0 +1,44 @@
+name: Seed district data (jednorázově)
+
+# Nahraje server-data/mc.json a server-data/dary.jsonl do ../data/ na
+# serveru (mimo webroot public_html/, mimo běžný git/FTP deploy).
+#
+# POZOR: spouštět JEN JEDNOU, před prvním darem na čtvrť (ctvrte.html).
+# Po prvním reálném daru by opakované spuštění přepsalo /data/dary.jsonl
+# zpátky na těch 6 zárodečných záznamů a smazalo tak všechny mezitím
+# přijaté dary — proto vyžaduje ruční potvrzení textem "ano".
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Napiš přesně "ano" — potvrzuješ, že ../data/dary.jsonl na serveru ještě NEEXISTUJE (jinak přepíšeš reálné dary zpět na zárodečná data)'
+        required: true
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ověření potvrzení
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "ano" ]; then
+            echo "Zrušeno — do pole confirm musíš napsat přesně 'ano'."
+            exit 1
+          fi
+
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y lftp
+
+      - name: Upload mc.json + dary.jsonl do ../data/
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          REMOTE="lepsibrno.cz/data"
+          OPTS="set ssl:verify-certificate no; set ssl:check-hostname no; set ftp:ssl-allow true; set ftp:ssl-protect-data true; set ftp:use-pasv-address no; set net:timeout 15; set net:max-retries 2;"
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$OPTS mkdir -p $REMOTE; put -O $REMOTE server-data/mc.json; put -O $REMOTE server-data/dary.jsonl; bye"
+          echo "✓ nahráno do ../data/ (mimo webroot)"
