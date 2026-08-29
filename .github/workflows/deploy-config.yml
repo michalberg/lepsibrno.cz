@@ -1,0 +1,53 @@
+name: Deploy config.php (lftp)
+
+# config.php se záměrně nenahrává běžným deployem (obsahuje všechny
+# secrety) a hlavní "Deploy to FTP" akce navíc na tenhle hosting
+# spolehlivě nedosáhne (timeout). Tenhle workflow config.php vyrenderuje
+# ze šablony stejně jako deploy.yml a nahraje ho fungujícím lftp kanálem
+# (ftp-upload.yml). Spouštět ručně, jen když se změní nějaký secret.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render config.php from template
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          AN_API_TOKEN: ${{ secrets.AN_API_TOKEN }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DARY_USERNAME: ${{ secrets.DARY_USERNAME }}
+          DARY_PASSWORD: ${{ secrets.DARY_PASSWORD }}
+        run: |
+          php -r '
+            $tpl = file_get_contents("config.template.php");
+            $out = strtr($tpl, [
+              "__STRIPE_SECRET_KEY__"     => getenv("STRIPE_SECRET_KEY") ?: "",
+              "__STRIPE_WEBHOOK_SECRET__" => getenv("STRIPE_WEBHOOK_SECRET") ?: "",
+              "__AN_API_TOKEN__"          => getenv("AN_API_TOKEN") ?: "",
+              "__ADMIN_PASSWORD__"        => getenv("ADMIN_PASSWORD") ?: "",
+              "__DARY_USERNAME__"         => getenv("DARY_USERNAME") ?: "",
+              "__DARY_PASSWORD__"         => getenv("DARY_PASSWORD") ?: "",
+            ]);
+            file_put_contents("config.php", $out);
+          '
+
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y lftp
+
+      - name: Upload config.php
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          REMOTE="lepsibrno.cz/public_html"
+          OPTS="set ssl:verify-certificate no; set ssl:check-hostname no; set ftp:ssl-allow true; set ftp:ssl-protect-data true; set ftp:use-pasv-address no; set net:timeout 15; set net:max-retries 2;"
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$OPTS put -O $REMOTE config.php; bye"
+          echo "✓ config.php nahráno"
