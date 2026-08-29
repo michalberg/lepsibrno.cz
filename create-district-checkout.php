@@ -91,7 +91,7 @@ $params = [
         'price_data' => [
             'currency'     => 'czk',
             'unit_amount'  => $amount * 100, // v haléřích
-            'product_data' => ['name' => 'Dar na inzerci v radničním zpravodaji – ' . $mcNazev],
+            'product_data' => ['name' => 'Dar na volební kampaň v Brně'],
         ],
     ]],
     'metadata' => $metadata,
