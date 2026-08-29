@@ -1,0 +1,26 @@
+name: Admin bootstrap (rebuild-stav + AN tagy)
+
+# Spustí rebuild-stav.php a create-an-tags.php na živém webu s tokenem
+# z ADMIN_PASSWORD secretu — token se nikdy nezobrazí (GitHub ho v logu
+# automaticky maskuje) a neopouští běh Actions. Obě volání jsou
+# bezpečná spustit i opakovaně (idempotentní), žádná extra pojistka
+# tedy není potřeba.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: rebuild-stav.php
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          curl -sS "https://lepsibrno.cz/rebuild-stav.php?token=$ADMIN_PASSWORD"
+
+      - name: create-an-tags.php
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          curl -sS "https://lepsibrno.cz/create-an-tags.php?token=$ADMIN_PASSWORD"
