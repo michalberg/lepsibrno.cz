@@ -227,7 +227,10 @@
     display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
     margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px dashed #e6e6e6;
   }
-  .payment-recap-text { font-size: 17px; font-weight: 600; color: #022815; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .payment-recap-text {
+    font-size: 17px; font-weight: 600; color: #022815; line-height: 1.4; font-variant-numeric: tabular-nums;
+    flex: 1; min-width: 0;
+  }
   .payment-recap-text strong { font-weight: 800; }
   .change-link {
     background: none; border: none; font-size: 13px; font-weight: 700; color: #067a40;
@@ -707,6 +710,14 @@
     amounts[i] = value;
     e.target.value = value ? formatNumber(value) : '';
     updateDynamic(i);
+  });
+
+  // Klik/tab do pole označí celou předvyplněnou částku, ať ji první
+  // napsaná číslice rovnou přepíše — bez rizika, že hodnota zmizí, jen
+  // když se tam uživatel podívá a nic nenapíše (na rozdíl od mazání).
+  table.addEventListener('focusin', (e) => {
+    if (!e.target.matches('.district-input')) return;
+    e.target.select();
   });
 
   table.addEventListener('click', (e) => {
