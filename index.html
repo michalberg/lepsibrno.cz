@@ -1061,7 +1061,7 @@
       fetch(LOG_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mc: d.mcKey, amount, method: 'prevod', donor }),
+        body: JSON.stringify({ mc: d.mcKey, amount, method: 'prevod', donor, tracking: TRACKING }),
         keepalive: true,
       })
         .then(() => fetch(`/stav.json?t=${Date.now()}`, { cache: 'no-store' }))

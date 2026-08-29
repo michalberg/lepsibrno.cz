@@ -116,11 +116,21 @@ function donor_db(): PDO {
             donor_phone TEXT,
             donor_city TEXT,
             variable_symbol TEXT,
-            stripe_session_id TEXT
+            stripe_session_id TEXT,
+            utm_source TEXT,
+            utm_medium TEXT,
+            utm_campaign TEXT,
+            utm_content TEXT,
+            utm_term TEXT
         )
     ");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_district_donations_mc ON district_donations(mc)");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_district_donations_created ON district_donations(created_at)");
+    // Pro tabulku, která už na serveru existovala před přidáním UTM sloupců
+    // (CREATE TABLE IF NOT EXISTS je na ně krátký).
+    foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as $col) {
+        ensure_column($pdo, 'district_donations', $col, 'TEXT');
+    }
     // Shoda se seznamem telefundraisingu (viz refresh_telefundraising_matches) —
     // sloupec musí existovat hned, i než poprvé proběhne přepočet.
     foreach (['donors', 'onetime_synced', 'recurring_synced'] as $table) {
@@ -140,6 +150,7 @@ function record_district_donation(array $data): ?int {
         'mc', 'mc_nazev', 'payment_method', 'amount',
         'donor_name', 'donor_surname', 'donor_email', 'donor_phone', 'donor_city',
         'variable_symbol', 'stripe_session_id',
+        'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term',
     ];
     try {
         $pdo = donor_db();
@@ -155,6 +166,26 @@ function record_district_donation(array $data): ?int {
     } catch (Throwable $e) {
         error_log('record_district_donation error: ' . $e->getMessage());
         return null;
+    }
+}
+
+/**
+ * Zjistí, jestli už v dané tabulce existuje řádek s touhle Stripe session_id.
+ * Stripe může stejnou webhook událost doručit vícekrát (retry, ruční resend
+ * v Dashboardu) — bez týhle kontroly by to vytvořilo duplicitní řádek.
+ * $table je vždy pevný string z kódu (ne uživatelský vstup), takže je
+ * interpolace do SQL bezpečná.
+ */
+function stripe_session_processed(string $table, string $sessionId): bool {
+    if ($sessionId === '') return false;
+    try {
+        $pdo = donor_db();
+        $stmt = $pdo->prepare("SELECT 1 FROM $table WHERE stripe_session_id = ? LIMIT 1");
+        $stmt->execute([$sessionId]);
+        return (bool)$stmt->fetchColumn();
+    } catch (Throwable $e) {
+        error_log('stripe_session_processed error: ' . $e->getMessage());
+        return false;
     }
 }
 

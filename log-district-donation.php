@@ -34,10 +34,11 @@ if (!is_array($input)) {
     exit;
 }
 
-$mcKey  = (string)($input['mc'] ?? '');
-$amount = (int)($input['amount'] ?? 0);
-$method = (string)($input['method'] ?? '');
-$donor  = is_array($input['donor'] ?? null) ? $input['donor'] : [];
+$mcKey    = (string)($input['mc'] ?? '');
+$amount   = (int)($input['amount'] ?? 0);
+$method   = (string)($input['method'] ?? '');
+$donor    = is_array($input['donor'] ?? null) ? $input['donor'] : [];
+$tracking = is_array($input['tracking'] ?? null) ? $input['tracking'] : [];
 
 if ($method !== 'prevod' && $method !== 'karta') {
     http_response_code(400);
@@ -85,6 +86,11 @@ record_district_donation([
     'donor_email'    => $donor['email']   ?? null,
     'donor_phone'    => $donor['mobile']  ?? null,
     'donor_city'     => $donor['city']    ?? null,
+    'utm_source'     => $tracking['utm_source']   ?? null,
+    'utm_medium'     => $tracking['utm_medium']   ?? null,
+    'utm_campaign'   => $tracking['utm_campaign'] ?? null,
+    'utm_content'    => $tracking['utm_content']  ?? null,
+    'utm_term'       => $tracking['utm_term']     ?? null,
 ]);
 
 echo json_encode(['ok' => true]);

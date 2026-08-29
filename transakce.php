@@ -98,13 +98,11 @@ $onetime = $pdo->query('SELECT * FROM onetime_synced ORDER BY dary_created_at DE
 // Pravidelné dary založené přímo na dary.zeleni.cz (mimo lepsibrno.cz).
 // Patří k „předplatnému" → níže je slučujeme s tabulkou donors do součtů i výpisu.
 $recurring = $pdo->query('SELECT * FROM recurring_synced ORDER BY dary_created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
-// Dary na čtvrť (index.html — inzerce v radničních zpravodajích). Souhrn
-// za čtvrť čteme přímo z /stav.json (přepočítává ho mc-store.php při
-// každém daru, tady není důvod počítat ho znovu) — jednotlivé transakce
-// se jmény dárců z vlastní tabulky district_donations.
+// Dary na čtvrť (index.html — inzerce v radničních zpravodajích). Součty
+// i výpis počítáme čistě z vlastní tabulky district_donations (skutečné
+// transakce se jmény dárců) — NE ze /stav.json, který kvůli veřejným
+// progress barům počítá i zárodečná data, viz níže u $districtTotal.
 $districtDonations = $pdo->query('SELECT * FROM district_donations ORDER BY created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
-$stavRaw = @file_get_contents(__DIR__ . '/stav.json');
-$stav = $stavRaw !== false ? json_decode($stavRaw, true) : null;
 try {
     $mcConfig = mc_load_config();
 } catch (Throwable $e) {
@@ -201,17 +199,24 @@ $onetimeCount = count($onetime);
 $onetimeSum   = array_sum(array_map(fn($r) => (int)($r['amount'] ?? 0), $onetime));
 
 // ── Souhrn darů na čtvrť (index.html) ──────────────────────────────────────
-// Celkem a rozpad po čtvrtích bereme rovnou z /stav.json (autoritativní,
-// počítá ho mc-store.php ze CELÉHO dary.jsonl včetně zárodečných darů) —
-// district_donations je jen evidence jednotlivých transakcí se jmény, pro
-// součty se nepoužívá, protože zárodečné dary v ní logicky nejsou.
+// Počítáno čistě z district_donations (skutečné transakce se jmény dárců),
+// NE ze /stav.json — ten počítá i šest zárodečných darů zapsaných napřímo
+// do dary.jsonl (nejsou to reálné transakce, viz server-data/dary.jsonl),
+// a v admin přehledu je nechceme míchat do reálných součtů.
 $districtCount    = count($districtDonations);
 $districtSum      = array_sum(array_map(fn($r) => (int)($r['amount'] ?? 0), $districtDonations));
 $districtCardSum  = array_sum(array_map(fn($r) => $r['payment_method'] === 'karta' ? (int)($r['amount'] ?? 0) : 0, $districtDonations));
 $districtBankSum  = $districtSum - $districtCardSum;
-$districtTotal    = (int)($stav['celkem']['vybrano'] ?? 0);
-$districtGoal     = (int)($stav['celkem']['cil'] ?? array_sum(array_map(fn($d) => (int)($d['cil'] ?? 0), $mcConfig)));
-$districtDonors   = (int)($stav['celkem']['darcu'] ?? 0);
+$districtTotal    = $districtSum;
+$districtGoal     = array_sum(array_map(fn($d) => (int)($d['cil'] ?? 0), $mcConfig));
+$districtDonors   = $districtCount;
+
+// Vybráno po jednotlivých čtvrtích, opět jen ze skutečných transakcí.
+$districtByMc = [];
+foreach ($districtDonations as $r) {
+    $mcKeyRow = (string)($r['mc'] ?? '');
+    $districtByMc[$mcKeyRow] = ($districtByMc[$mcKeyRow] ?? 0) + (int)($r['amount'] ?? 0);
+}
 
 // ── Souhrny předplatného (donors + pravidelné z dary.zeleni.cz) ────────────
 $count          = count($subs);
@@ -442,36 +447,35 @@ function render_login(string $error, bool $notConfigured): void {
     </div>
   </div>
 
-  <h2>Dary na čtvrti <span class="muted">(inzerce v radničních zpravodajích, index.html — aktuální kampaň)</span></h2>
-  <?php if ($stav === null): ?>
-    <div class="empty">/stav.json ještě neexistuje — spusť jednou <code>rebuild-stav.php</code>, nebo počkej na první dar.</div>
-  <?php endif; ?>
+  <h2>Dary na čtvrti <span class="muted">(inzerce v radničních zpravodajích — aktuální kampaň)</span></h2>
+  <p class="muted" style="font-size:.85rem;margin:-.5rem 0 1rem">Součty jen ze skutečných transakcí — bez šesti zárodečných darů zapsaných přímo do dary.jsonl (ty jde vidět jen ve veřejném součtu na webu).</p>
   <div class="cards">
     <div class="card"><div class="label">Vybráno / cíl</div><div class="value"><?= kc($districtTotal) ?></div>
       <div class="muted" style="font-size:.8rem;margin-top:.25rem">z <?= kc($districtGoal) ?></div>
     </div>
-    <div class="card"><div class="label">Dárců (dary.jsonl)</div><div class="value"><?= $districtDonors ?></div></div>
+    <div class="card"><div class="label">Dárců</div><div class="value"><?= $districtDonors ?></div></div>
     <div class="card"><div class="label">Transakcí v evidenci</div><div class="value"><?= $districtCount ?></div>
       <div class="muted" style="font-size:.8rem;margin-top:.25rem">karta <?= kc($districtCardSum) ?> · převod <?= kc($districtBankSum) ?></div>
     </div>
   </div>
 
-  <?php if ($stav !== null && $mcConfig): ?>
-  <h3 style="font-size:.95rem;margin:1.5rem 0 .6rem;color:var(--muted)">Podle čtvrti</h3>
+  <?php if ($mcConfig): ?>
+  <h3 style="font-size:.95rem;margin:1.5rem 0 .6rem;color:var(--muted)">Podle čtvrti <span class="muted">(jen skutečné transakce)</span></h3>
   <div class="scroll">
     <table>
       <thead><tr><th>Čtvrť</th><th class="num">Vybráno</th><th class="num">Cíl</th><th class="num">%</th><th class="num">Schránky</th></tr></thead>
       <tbody>
       <?php foreach ($mcConfig as $mcKey => $d):
-        $s = $stav['mc'][$mcKey] ?? ['vybrano' => 0, 'cil' => (int)($d['cil'] ?? 0), 'schranky' => (int)($d['schranky'] ?? 0)];
-        $pct = $s['cil'] > 0 ? round($s['vybrano'] / $s['cil'] * 100) : 0;
+        $vybrano = $districtByMc[$mcKey] ?? 0;
+        $cil = (int)($d['cil'] ?? 0);
+        $pct = $cil > 0 ? round($vybrano / $cil * 100) : 0;
       ?>
         <tr>
           <td><?= h((string)($d['nazev'] ?? $mcKey)) ?></td>
-          <td class="num"><?= kc((int)$s['vybrano']) ?></td>
-          <td class="num"><?= kc((int)$s['cil']) ?></td>
+          <td class="num"><?= kc($vybrano) ?></td>
+          <td class="num"><?= kc($cil) ?></td>
           <td class="num"><?= $pct ?> %</td>
-          <td class="num"><?= number_format((int)$s['schranky'], 0, ',', ' ') ?></td>
+          <td class="num"><?= number_format((int)($d['schranky'] ?? 0), 0, ',', ' ') ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
@@ -487,7 +491,7 @@ function render_login(string $error, bool $notConfigured): void {
     <table>
       <thead><tr>
         <th>Datum</th><th>Metoda</th><th>Čtvrť</th><th class="num">Částka</th>
-        <th>Jméno</th><th>E-mail</th><th>Telefon</th>
+        <th>Jméno</th><th>E-mail</th><th>Telefon</th><th>Zdroj (UTM)</th>
       </tr></thead>
       <tbody>
       <?php foreach ($districtDonations as $r):
@@ -503,6 +507,7 @@ function render_login(string $error, bool $notConfigured): void {
           <td><?= h(trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? ''))) ?></td>
           <td><?= h($r['donor_email']) ?></td>
           <td><?= h($r['donor_phone']) ?></td>
+          <td class="muted"><?= h((string)($r['utm_source'] ?: '—')) ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>

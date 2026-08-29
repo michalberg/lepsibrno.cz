@@ -70,6 +70,15 @@ $mcKey = (string)($m['mc'] ?? '');
 if ($mcKey !== '') {
     require __DIR__ . '/mc-store.php';
 
+    // Idempotence: Stripe může tuhle událost doručit i podruhé (retry,
+    // ruční resend) — bez kontroly by se dar započítal do dary.jsonl
+    // (veřejné progress bary) i do admin evidence dvakrát.
+    $sessionId = (string)($session['id'] ?? '');
+    if (stripe_session_processed('district_donations', $sessionId)) {
+        http_response_code(200);
+        exit('Already processed');
+    }
+
     try {
         mc_append_donation($mcKey, $amount, 'karta');
     } catch (Throwable $e) {
@@ -89,6 +98,11 @@ if ($mcKey !== '') {
         'donor_phone'        => $m['donor_phone'] ?? null,
         'donor_city'         => $m['donor_city'] ?? null,
         'stripe_session_id'  => $session['id'] ?? null,
+        'utm_source'         => $m['utm_source'] ?? null,
+        'utm_medium'         => $m['utm_medium'] ?? null,
+        'utm_campaign'       => $m['utm_campaign'] ?? null,
+        'utm_content'        => $m['utm_content'] ?? null,
+        'utm_term'           => $m['utm_term'] ?? null,
     ]);
 
     if ($config['an_api_token'] !== '' && $email !== '') {
@@ -176,6 +190,16 @@ try {
         $monthsLeft = max(1, $count);
     }
 } catch (Exception $e) { /* ponecháme 1 */ }
+
+// Idempotence: stejná ochrana jako u dárcovské větve pro čtvrti výše —
+// opakované doručení stejné události by jinak vytvořilo duplicitní řádek
+// v donors s dnešním datem, ale starou částkou (to je přesně to, co se
+// stalo předtím).
+$sessionId = (string)($session['id'] ?? '');
+if (stripe_session_processed('donors', $sessionId)) {
+    http_response_code(200);
+    exit('Already processed');
+}
 
 // --- 0) Lokální evidence dárce ----------------------------------------------
 record_donor([
