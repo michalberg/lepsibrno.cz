@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doručte lepší Brno do své čtvrti</title>
+<meta name="description" content="Vybíráme na inzerci v radničních zpravodajích, aby o Zelených vědělo celé Brno, ne jen centrum. Vyberte si čtvrť a přispějte.">
+
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="cs_CZ">
+<meta property="og:site_name" content="LepsiBrno.cz">
+<meta property="og:title" content="Doručte lepší Brno do své čtvrti">
+<meta property="og:description" content="Vybíráme na inzerci v radničních zpravodajích, aby o nás vědělo celé Brno, ne jen centrum.">
+
+<link rel="stylesheet" href="colors_and_type.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #022815; }
+  body { font-family: 'UrbanGrotesk', sans-serif; background: #022815; color: #022815; overflow-x: hidden; }
+
+  /* ============ HERO / HLAVIČKA ============ */
+  .hero {
+    background:
+      radial-gradient(ellipse 80% 60% at 90% 10%, rgba(11,210,111,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 70% at 5% 100%, rgba(11,210,111,0.04) 0%, transparent 60%),
+      #022815;
+    color: #fff;
+    position: relative; overflow: hidden;
+    padding: 48px 80px 32px;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,200,220,0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none; z-index: 0;
+  }
+  .hero::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+  }
+  .hero-deco { position: absolute; pointer-events: none; z-index: 1; height: auto; display: block; }
+  .hero-logo { width: 112px; height: auto; display: block; margin-top: -20px; margin-bottom: 16px; }
+  /* Stejný princip jako na index.html: hero má větší boční padding než
+     section, takže hero text sedí nad vnějším okrajem bílé karty — obsah
+     karty je pak dál odsazený jejím vlastním (velkorysejším) paddingem. */
+  .hero-inner { position: relative; z-index: 2; max-width: 1000px; margin: 0 auto; }
+
+  .hero-title {
+    font-family: 'SVGDEurotype', serif; font-style: italic; font-weight: 600;
+    font-size: clamp(28px, 3.6vw, 50px);
+    line-height: 1.1; letter-spacing: 0; color: #fff;
+  }
+  .hero-subtitle {
+    margin-top: 14px;
+    font-family: 'UrbanGrotesk', sans-serif;
+    font-size: clamp(16px, 1.3vw, 20px);
+    font-weight: 500; color: #d9d9d9; line-height: 1.5;
+    max-width: 820px;
+  }
+  .hero-subtitle strong { color: #fff; font-weight: 800; }
+
+  .total-progress-wrap {
+    margin-top: 20px; padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .total-progress-label {
+    font-family: 'UrbanGrotesk', sans-serif; font-weight: 500;
+    font-size: 15px; color: rgba(217,217,217,0.8);
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .total-progress-label strong { color: #fff; font-weight: 800; }
+  .total-progress-track {
+    height: 10px; background: rgba(255,255,255,0.15); border-radius: 40px; overflow: hidden;
+  }
+  .total-progress-fill {
+    height: 100%; background: #ffa6d1; border-radius: 40px;
+    width: 0%; transition: width 0.5s ease;
+  }
+
+  .narrative {
+    margin-top: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+    max-width: 800px;
+  }
+  .narrative p {
+    font-family: 'UrbanGrotesk', sans-serif;
+    font-size: 16px; line-height: 1.6; font-weight: 400;
+    color: #d9d9d9;
+  }
+  .narrative p.narrative-cta {
+    font-weight: 400; font-size: 16px; line-height: 1.6;
+    color: #d9d9d9;
+  }
+
+  /* ============ SECTION / WHITE CARD ============ */
+  .section { padding: 24px 40px 64px; background: transparent; }
+  .section-inner {
+    max-width: 1000px; margin: 0 auto;
+    background: #fff; border-radius: 18px;
+    padding: 32px 56px 48px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    position: relative; overflow: hidden;
+  }
+  .section-inner::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #0bd26f 0%, #067a40 100%);
+  }
+
+  /* ============ DISTRICT TABLE ============ */
+  .table-eyebrow {
+    font-size: 13px; font-weight: 600;
+    color: #777; margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .district-table { display: flex; flex-direction: column; }
+
+  .district-row {
+    display: grid;
+    grid-template-columns: minmax(170px, 240px) minmax(200px, 1fr) minmax(240px, 280px);
+    column-gap: 20px;
+    row-gap: 4px;
+    align-items: start;
+    padding: 14px 10px;
+    border-bottom: 1px solid #ececec;
+    transition: background-color 0.2s;
+  }
+  .district-row:last-child { border-bottom: none; }
+  .district-row.paid { background: rgba(11,210,111,0.08); }
+  .district-row.selected { box-shadow: inset 3px 0 0 #022815; }
+
+  .district-name-col { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+  .district-name {
+    font-family: 'UrbanGrotesk', sans-serif;
+    font-weight: 700; font-size: 18px; color: #022815; line-height: 1.25;
+  }
+  .district-mailboxes { font-size: 13px; color: rgba(2,40,21,0.55); margin-top: 2px; font-weight: 400; }
+
+  .district-progress-col { grid-column: 2; grid-row: 1; align-self: center; }
+  .district-bar-track {
+    width: 100%; height: 8px; background: #d9d9d9; border-radius: 40px; overflow: hidden;
+  }
+  .district-bar-fill {
+    height: 100%; border-radius: 40px; width: 0%;
+    background: #ffa6d1;
+    transition: width 0.4s ease;
+  }
+  .district-bar-fill.paid { background: var(--color-green); }
+
+  .district-stat-row {
+    grid-column: 2; grid-row: 2;
+    padding-top: 6px;
+  }
+  .district-money-col {
+    font-size: 14px; font-weight: 500; color: #022815; line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .district-action-col {
+    grid-column: 3; grid-row: 1;
+    display: flex; gap: 8px; justify-content: flex-end; align-items: center;
+  }
+  .district-input-wrap { position: relative; display: inline-flex; align-items: center; }
+  .district-input {
+    width: 110px; padding: 9px 30px 9px 10px;
+    border: 2px solid #ddd; border-radius: 6px;
+    font-size: 14px; font-family: 'UrbanGrotesk', sans-serif; color: #022815;
+    text-align: right; outline: none; background: #fff;
+    transition: border-color 0.2s;
+    font-variant-numeric: tabular-nums;
+  }
+  .district-input:focus { border-color: var(--color-green); }
+  .kc-suffix {
+    position: absolute; right: 10px; font-size: 13px; color: #999; pointer-events: none;
+  }
+  .district-btn {
+    background: var(--color-green); color: #000; border: 2px solid var(--color-green);
+    padding: 8px 14px; border-radius: 6px;
+    font-weight: 800; font-size: 13px; cursor: pointer; white-space: nowrap;
+    font-family: 'UrbanGrotesk', sans-serif;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .district-btn:hover:not(:disabled) { background: #09b060; border-color: #09b060; }
+  .district-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  /* Zaplacená čtvrť: tlačítko je sekundární (obrys, bez výplně), aby si
+     zelená nekonkurovala sama se sebou — akce, i dokončený stav. */
+  .district-btn.secondary {
+    background: transparent; color: #022815; border-color: var(--color-green);
+  }
+  .district-btn.secondary:hover:not(:disabled) { background: rgba(11,210,111,0.1); border-color: var(--color-green); }
+
+  .district-dynamic {
+    grid-column: 3; grid-row: 2;
+    font-size: 12px; line-height: 1.4; color: rgba(2,40,21,0.55);
+    font-weight: 400; text-align: right; padding-top: 5px;
+    min-height: 17px;
+    font-variant-numeric: tabular-nums;
+  }
+  .district-dynamic.warn { color: #b23b3b; font-weight: 600; }
+
+  /* ============ MISSING DISTRICTS ============ */
+  .missing-block { margin-top: 6px; padding-top: 34px; border-top: 1px solid #ececec; }
+  .missing-block .section-divider { width: 40px; height: 3px; background: var(--color-green); border-radius: 2px; margin: 0 0 14px; }
+  .missing-block h2 {
+    font-family: 'UrbanGrotesk', sans-serif; font-weight: 800; font-size: 20px;
+    color: #022815; text-transform: none; letter-spacing: 0; line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .missing-block p {
+    font-size: 14px; line-height: 1.62; color: #555; font-weight: 400; max-width: 760px;
+  }
+
+  /* ============ PRICE NOTE ============ */
+  .price-note {
+    margin-top: 30px; padding-top: 20px; border-top: 1px solid #ececec;
+    font-size: 12px; color: #999; line-height: 1.55; font-weight: 400;
+  }
+
+  /* ============ PAYMENT STEP ============ */
+  #paymentView { display: none; }
+  #paymentView.visible { display: block; }
+  .payment-recap {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px dashed #e6e6e6;
+  }
+  .payment-recap-text { font-size: 17px; font-weight: 600; color: #022815; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .payment-recap-text strong { font-weight: 800; }
+  .change-link {
+    background: none; border: none; font-size: 13px; font-weight: 700; color: #067a40;
+    text-decoration: underline; cursor: pointer; font-family: 'UrbanGrotesk', sans-serif;
+    white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+  }
+  .change-link:hover { color: var(--color-green); }
+
+  .method-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 26px; }
+  .method-btn {
+    padding: 14px 12px; border: 2px solid #e3e3e3; border-radius: 12px; background: #fff;
+    cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; color: #555;
+    transition: border-color .15s, background .15s, color .15s; text-align: center;
+  }
+  .method-btn:hover { border-color: #bde9cd; }
+  .method-btn.active { border-color: var(--color-green); background: #f0fbf5; color: #000; }
+  .method-btn small { display: block; font-weight: 500; font-size: 12px; color: #888; margin-top: 3px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field label { font-size: 12px; font-weight: 700; color: #444; letter-spacing: 0.04em; text-transform: uppercase; }
+  .form-field input {
+    padding: 10px 13px; border: 2px solid #ddeee2; border-radius: 4px;
+    font-size: 14px; font-family: 'UrbanGrotesk', sans-serif;
+    transition: border-color 0.2s; outline: none; color: #022815; background: #fff;
+  }
+  .form-field input:focus { border-color: var(--color-green); }
+  .form-single { margin-bottom: 12px; }
+
+  .payment-submit {
+    background: var(--color-green); color: #000; border: none;
+    padding: 18px 30px; border-radius: 6px; font-size: 17px; font-weight: 800;
+    cursor: pointer; font-family: 'UrbanGrotesk', sans-serif;
+    box-shadow: 0 6px 20px rgba(11,210,111,0.35);
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    margin-top: 10px; width: 100%;
+  }
+  .payment-submit:hover { background: #09b060; transform: translateY(-1px); box-shadow: 0 10px 26px rgba(11,210,111,0.45); }
+
+  .form-error {
+    display: none;
+    margin-top: 14px; font-size: 13px; color: #a30000; line-height: 1.55;
+    background: #fff0f0; border: 1px solid #ffb3b3;
+    border-radius: 6px; padding: 12px 14px;
+  }
+  .form-error.visible { display: block; }
+  .form-error a { color: #a30000; text-decoration: underline; }
+
+  .form-tax-note {
+    margin-top: 16px;
+    font-size: 13px; color: #555; line-height: 1.55;
+    background: #f4fff8; border: 1px solid #d5eed8;
+    border-radius: 6px; padding: 12px 14px;
+  }
+  .form-legal { font-size: 11px; color: #888; line-height: 1.55; margin-top: 18px; }
+
+  /* ============ ÚSPĚŠNÁ PLATBA (PŘEVOD + QR) ============ */
+  .success { display: none; }
+  .success.visible { display: block; }
+  .success h3 {
+    font-family: 'UrbanGrotesk', sans-serif; font-weight: 800; font-size: 22px;
+    color: #022815; margin-bottom: 8px;
+  }
+  .success-lead { font-size: 14px; color: #555; line-height: 1.55; margin-bottom: 20px; }
+
+  .qr-wrap {
+    display: flex; justify-content: center; padding: 20px;
+    background: #f7f9f8; border-radius: 12px; margin-bottom: 20px;
+  }
+  .qr-wrap svg { width: 200px; height: 200px; display: block; }
+
+  .payment-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+  .payment-row {
+    display: grid; grid-template-columns: 140px 1fr auto; gap: 12px;
+    align-items: center; padding: 12px 16px;
+    background: #f4fff8; border-radius: 6px;
+    border: 1px solid #d5eed8;
+  }
+  .payment-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  .payment-value { font-size: 16px; font-weight: 700; color: #022815; word-break: break-all; font-variant-numeric: tabular-nums; }
+  .copy-btn {
+    background: #fff; border: 2px solid #d5eed8; border-radius: 4px;
+    padding: 7px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+    font-family: 'UrbanGrotesk', sans-serif;
+    transition: all 0.18s; white-space: nowrap;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    color: #067a40;
+  }
+  .copy-btn:hover, .copy-btn.copied { background: var(--color-green); border-color: var(--color-green); color: #000; }
+
+  .instructions-note {
+    background: #fff8e1; border-left: 3px solid #f5c842;
+    padding: 14px 16px; border-radius: 4px;
+    font-size: 13px; color: #444; line-height: 1.55;
+  }
+  .instructions-note strong { color: #000; }
+
+  @media (max-width: 500px) {
+    .payment-row { grid-template-columns: 1fr; gap: 6px; }
+    .payment-row .copy-btn { justify-self: start; }
+  }
+  .form-legal a { color: #067a40; text-decoration: underline; }
+  .form-legal a:hover { color: var(--color-green); }
+
+  /* ============ REFRÉN KAMPANĚ ============ */
+  .refren-wrap { background: #022815; padding: 8px 24px 56px; text-align: center; }
+  .refren-wrap img { max-width: 460px; width: 100%; height: auto; border-radius: 6px; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1024px) {
+    .hero { padding: 56px 40px 36px; }
+    .section { padding: 20px 40px 48px; }
+  }
+
+  /* 960px, ne 720px: mřížka řádku čtvrti (3 sloupce, min. šířka ~650px)
+     by se jinak mezi 720-900px zúžila víc, než kolik potřebuje, a přetékala
+     dřív, než by se stihla přepnout na skládané mobilní zobrazení. */
+  @media (max-width: 960px) {
+    .hero { padding: 40px 20px 24px; }
+    .section { padding: 0 12px 32px; }
+    .section-inner { padding: 16px 14px 20px; border-radius: 14px; }
+
+    .district-row {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 14px 6px;
+    }
+    .district-name-col, .district-progress-col, .district-stat-row, .district-action-col, .district-dynamic {
+      grid-column: unset; grid-row: unset; align-self: stretch;
+    }
+    .district-stat-row { padding-top: 2px; }
+    .district-action-col { justify-content: flex-start; }
+    .district-input { flex: 0 0 auto; width: 96px; }
+    .district-btn { flex: 0 0 auto; padding: 10px 18px; }
+    .district-dynamic { text-align: left; }
+
+    .ad-word { display: none; }
+
+    .payment-recap { flex-wrap: wrap; }
+    .method-toggle { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+  @media (min-width: 721px) {
+    /* na desktopu se mobilní řádkové řazení nepoužívá, pořadí drží grid */
+  }
+</style>
+</head>
+<body>
+
+<div id="mainView">
+
+  <section class="hero">
+    <img class="hero-deco" src="assets/hvezdicka-crop.png" alt="" style="top:6%;right:10%;width:70px;opacity:0.55;transform:rotate(-8deg)">
+    <div class="hero-inner">
+      <img class="hero-logo" src="assets/logo-zelene-brno-crop.png" alt="Zelené Brno">
+      <h1 class="hero-title">Doručte lepší Brno do své čtvrti</h1>
+      <p class="hero-subtitle">Vybíráme na inzerci v <strong>radničních zpravodajích</strong>, které dostane každá domácnost do schránky. Aby o nás vědělo celé Brno, ne jen centrum.</p>
+
+      <div class="narrative">
+        <p>Do zastupitelstva města se volí za celé Brno najednou, takže hlas z Tuřan váží stejně jako hlas z Veveří. Bez čtvrtí, kde nás lidé zatím tolik neznají, se k výsledku, který nás dostane na radnici, nedostaneme.</p>
+        <p class="narrative-cta">Zpravodaje uzavírají inzerci během září. Věříme, že to spolu zvládneme.</p>
+      </div>
+
+      <div class="total-progress-wrap">
+        <div class="total-progress-label">Vybráno <strong><span id="totalRaised">—</span> ze 100 000 Kč</strong> · zatím přispělo <strong id="donorCount">—</strong> lidí</div>
+        <div class="total-progress-track">
+          <div class="total-progress-fill" id="totalProgressFill"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-inner">
+      <p class="table-eyebrow">Celkem čtrnáct čtvrtí, <span id="totalMailboxes">—</span> schránek</p>
+      <div class="district-table" id="districtTable"></div>
+
+      <div class="missing-block">
+        <div class="section-divider"></div>
+        <h2>Chybí vám tu Brno-střed nebo jiná čtvrť?</h2>
+        <p>Brno-střed inzerci od politických stran nepřijímá. V ostatních čtvrtích zpravodaj do voleb nevyjde, inzerci nebere, nebo je cenově velmi nevýhodná. Pokud jste odsud, přispějte prosím tam, kde zatím chybí nejvíc.</p>
+      </div>
+
+      <p class="price-note">Cena zahrnuje inzerci o velikosti čtvrt stránky, grafické zpracování a administraci objednávky.</p>
+    </div>
+  </section>
+
+</div>
+
+<div id="paymentView">
+  <section class="section" style="padding-top: 0;">
+    <div class="section-inner" style="max-width: 720px;">
+      <div class="payment-recap">
+        <p class="payment-recap-text" id="recapText">—</p>
+        <button type="button" class="change-link" id="changeBtn">změnit</button>
+      </div>
+
+      <div class="method-toggle" id="methodToggle">
+        <button type="button" class="method-btn active" data-method="transfer">Zaplatit převodem<small>z účtu</small></button>
+        <button type="button" class="method-btn" data-method="card">Zaplatit kartou<small>přes Stripe</small></button>
+      </div>
+
+      <form id="donorForm">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="firstName">Jméno</label>
+            <input id="firstName" name="firstName" required placeholder="Jméno">
+          </div>
+          <div class="form-field">
+            <label for="lastName">Příjmení</label>
+            <input id="lastName" name="lastName" required placeholder="Příjmení">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="birth">Datum narození</label>
+            <input id="birth" name="birth" required placeholder="DD.MM.RRRR" pattern="\d{1,2}\.\d{1,2}\.\d{4}">
+          </div>
+          <div class="form-field">
+            <label for="phone">Telefon <span style="font-weight:500;color:#999;text-transform:none;letter-spacing:0">(nepovinné)</span></label>
+            <input id="phone" name="phone" type="tel" placeholder="+420 …">
+          </div>
+        </div>
+        <div class="form-single">
+          <div class="form-field">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" required placeholder="tvuj@email.cz">
+          </div>
+        </div>
+        <div class="form-single">
+          <div class="form-field">
+            <label for="street">Ulice a číslo popisné</label>
+            <input id="street" name="street" required placeholder="Veveří 1234/56">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="city">Město</label>
+            <input id="city" name="city" required placeholder="Brno">
+          </div>
+          <div class="form-field">
+            <label for="zip">PSČ</label>
+            <input id="zip" name="zip" required placeholder="602 00" pattern="\d{3} ?\d{2}">
+          </div>
+        </div>
+
+        <button type="submit" class="payment-submit" id="paySubmitBtn">Zobrazit údaje k platbě →</button>
+
+        <div class="form-error" id="formError"></div>
+
+        <p class="form-tax-note">
+          Souhrnný roční dar 1 000 Kč a vyšší si můžete odečíst od základu pro výpočet daně z příjmu.
+        </p>
+
+        <p class="form-legal">
+          Strana zelených (IČ 00409740) zpracovává osobní údaje dárců na základě zákonné povinnosti evidovat dárce politických stran v souladu se zákonem č. 424/1991 Sb. Prosím, berte na vědomí, že osobní údaje v rozsahu jméno, příjmení, datum narození a obec trvalého bydliště budou zveřejněny na webových stránkách Strany zelených a Úřadu pro dohled nad hospodařením politických stran a hnutí v rámci výroční zprávy nebo zprávy o volební kampani. E-mailovou adresu a číslo telefonu zpracovává Strana zelených na základě svého oprávněného zájmu za účelem přímého marketingu a rozvoje vztahu s dárci. Proti takovému zpracování je možné vznést námitku na <a href="mailto:soukromi@zeleni.cz">soukromi@zeleni.cz</a>. Více o ochraně osobních údajů ve Straně zelených najdete na <a href="http://www.zeleni.cz/soukromi" target="_blank" rel="noopener">www.zeleni.cz/soukromi</a>.
+        </p>
+      </form>
+
+      <div class="success" id="successBox">
+        <h3>Díky!</h3>
+        <p class="success-lead">Tady jsou tvoje platební údaje. Naskenuj QR kód přímo v bankovní aplikaci, nebo použij údaje níže ručně.</p>
+
+        <div class="qr-wrap" id="qrWrap"><div id="qrCode"></div></div>
+
+        <div class="payment-grid">
+          <div class="payment-row">
+            <span class="payment-label">Číslo účtu</span>
+            <span class="payment-value" id="payAccount">—</span>
+            <button class="copy-btn" data-copy-target="payAccount" type="button">Kopírovat</button>
+          </div>
+          <div class="payment-row">
+            <span class="payment-label">Variabilní symbol</span>
+            <span class="payment-value" id="payVs">—</span>
+            <button class="copy-btn" data-copy-target="payVs" type="button">Kopírovat</button>
+          </div>
+          <div class="payment-row">
+            <span class="payment-label">Částka</span>
+            <span class="payment-value"><span id="payAmount">—</span> Kč</span>
+            <button class="copy-btn" data-copy-target="payAmount" type="button">Kopírovat</button>
+          </div>
+        </div>
+
+        <div class="instructions-note">
+          Do zprávy pro příjemce napiš <strong>„dar"</strong> — je to zákonný požadavek. Bez QR kódu to bankovní aplikace doplní za tebe.
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="refren-wrap">
+  <img src="assets/refren-crop.png" alt="Protože Brno má na víc">
+</div>
+
+<script src="assets/qrcode.js"></script>
+<script>
+(function () {
+  // Config — stejné API/fond/účet jako na index.html, jen jde o jednorázový
+  // (ne pravidelný) dar. Společný AN tag je natvrdo v kódu podle zadání,
+  // čtvrťový tag se dopočítá ze slugu jména (stejný vzor jako v mc.json).
+  const API_URL = 'https://api.dary.zeleni.cz/payments';
+  const FUND_ID = '57e111cd859b5a092c8c7c1a';
+  const AN_URL = 'https://actionnetwork.org/api/v2/forms/bc501b67-c587-494a-bf1e-570a9f73e8f5/submissions/';
+  const AN_TAG_COMMON = 'brno-2026-noviny';
+  const BANK_ACCOUNT = '2400146729/2010';
+  const BANK_IBAN = 'CZ5520100000002400146729';
+  const CHECKOUT_URL = '/create-district-checkout.php';
+  const LOG_URL = '/log-district-donation.php';
+  const ERROR_CONTACT = 'kampan@zelenebrno.cz';
+
+  const TRACKING = (function () {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      referrer: document.referrer || null,
+      landing_page: window.location.href,
+      utm_source: params.get('utm_source') || null,
+      utm_medium: params.get('utm_medium') || null,
+      utm_campaign: params.get('utm_campaign') || null,
+      utm_content: params.get('utm_content') || null,
+      utm_term: params.get('utm_term') || null,
+    };
+  })();
+
+  // Pořadí je fixní, podle české abecedy — nikdy se nepřerovnává podle stavu.
+  // "current" je 0, dokud se nenačte /stav.json (viz níže) — rozbitá tabulka
+  // je horší než tabulka bez čísel, takže stránka musí fungovat i bez něj.
+  const DISTRICTS = [
+    { name: 'Brno-sever',            mailboxes: 28000, goal: 9000,  current: 0 },
+    { name: 'Bystrc',                mailboxes: 13000, goal: 11000, current: 0 },
+    { name: 'Černovice',             mailboxes: 4000,  goal: 4000,  current: 0 },
+    { name: 'Kohoutovice',           mailboxes: 6000,  goal: 7000,  current: 0 },
+    { name: 'Komín',                 mailboxes: 4200,  goal: 7500,  current: 0 },
+    { name: 'Královo Pole',          mailboxes: 16100, goal: 15000, current: 0 },
+    { name: 'Líšeň',                 mailboxes: 12100, goal: 12500, current: 0 },
+    { name: 'Maloměřice a Obřany',   mailboxes: 2300,  goal: 1500,  current: 0 },
+    { name: 'Nový Lískovec',         mailboxes: 5000,  goal: 5000,  current: 0 },
+    { name: 'Tuřany',                mailboxes: 1100,  goal: 2000,  current: 0 },
+    { name: 'Vinohrady',             mailboxes: 5850,  goal: 5500,  current: 0 },
+    { name: 'Žabovřesky',            mailboxes: 12000, goal: 9500,  current: 0 },
+    { name: 'Žebětín',               mailboxes: 3300,  goal: 2500,  current: 0 },
+    { name: 'Židenice',              mailboxes: 11600, goal: 8000,  current: 0 },
+  ];
+
+  const MIN_DONATION = 50;
+  const DEFAULT_AMOUNT = 1500;
+  const amounts = DISTRICTS.map(() => DEFAULT_AMOUNT);
+  let lastDistrictIndex = null;
+
+  function formatNumber(n) {
+    n = Math.round(n);
+    let s = String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return (n < 0 ? '-' : '') + s;
+  }
+
+  function slug(s) {
+    return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  // Schránky: zaokrouhleno na stovky, u čísel nad tisíc klidně na půltisíce.
+  // Vždy zaokrouhleno DOLŮ (nikdy nepřestřelit skutečnost) — na stovky pod
+  // 5 000, na půltisíce nad tím.
+  function roundMailboxes(x) {
+    if (x <= 0) return 0;
+    const base = x < 5000 ? 100 : 500;
+    return Math.floor(x / base) * base;
+  }
+
+  function parseAmount(raw) {
+    const digits = raw.replace(/[^\d]/g, '');
+    return digits ? parseInt(digits, 10) : 0;
+  }
+
+  function mailboxesForAmount(d, amount) {
+    return roundMailboxes((amount / d.goal) * d.mailboxes);
+  }
+
+  // mc klíč = slug jména — stejný vzor jako klíče v /data/mc.json na
+  // serveru, takže se dá spárovat s /stav.json bez dalšího mapování.
+  DISTRICTS.forEach(d => { d.mcKey = slug(d.name); });
+
+  const table = document.getElementById('districtTable');
+
+  function districtRowHTML(d, i) {
+    const isPaid = d.current >= d.goal;
+    const pct = Math.round((d.current / d.goal) * 100);
+    const barWidth = isPaid ? 100 : Math.min(pct, 100);
+    const remaining = d.goal - d.current;
+    const statusText = isPaid ? ' · Zaplaceno' : ` · chybí ${formatNumber(remaining)}`;
+    return `
+      <div class="district-row${isPaid ? ' paid' : ''}" data-index="${i}" id="ctvrt-${slug(d.name)}">
+        <div class="district-name-col">
+          <div class="district-name">${d.name}</div>
+          <div class="district-mailboxes">${formatNumber(d.mailboxes)} schránek</div>
+        </div>
+
+        <div class="district-progress-col">
+          <div class="district-bar-track"><div class="district-bar-fill${isPaid ? ' paid' : ''}" style="width:${barWidth}%"></div></div>
+        </div>
+
+        <div class="district-stat-row">
+          <div class="district-money-col">Vybráno ${formatNumber(d.current)} z ${formatNumber(d.goal)} Kč${statusText}</div>
+        </div>
+
+        <div class="district-action-col">
+          <div class="district-input-wrap">
+            <input class="district-input" type="text" inputmode="numeric" pattern="[0-9\\s]*"
+                   value="${formatNumber(DEFAULT_AMOUNT)}"
+                   aria-label="Částka daru pro čtvrť ${d.name}">
+            <span class="kc-suffix">Kč</span>
+          </div>
+          <button class="district-btn${isPaid ? ' secondary' : ''}" type="button" aria-label="Přispět do čtvrti ${d.name}">
+            <span class="btn-label">Přispět</span>
+          </button>
+        </div>
+
+        <div class="district-dynamic"></div>
+      </div>`;
+  }
+
+  table.innerHTML = DISTRICTS.map(districtRowHTML).join('');
+
+  function updateDynamic(i) {
+    const d = DISTRICTS[i];
+    const row = table.querySelector(`.district-row[data-index="${i}"]`);
+    const btn = row.querySelector('.district-btn');
+    const btnLabel = btn.querySelector('.btn-label');
+    const dynEl = row.querySelector('.district-dynamic');
+    const amount = amounts[i];
+
+    if (!amount || amount <= 0) {
+      dynEl.textContent = '';
+      dynEl.classList.remove('warn');
+      btn.disabled = true;
+      btnLabel.textContent = 'Zadejte částku';
+      return;
+    }
+
+    btnLabel.textContent = 'Přispět';
+
+    if (amount < MIN_DONATION) {
+      dynEl.textContent = 'Minimální dar je 50 Kč';
+      dynEl.classList.add('warn');
+      btn.disabled = true;
+      return;
+    }
+
+    btn.disabled = false;
+    dynEl.classList.remove('warn');
+
+    const isPaid = d.current >= d.goal;
+    if (isPaid) {
+      dynEl.textContent = 'Zaplaceno, dar použijeme tam, kde chybí';
+      return;
+    }
+
+    const remaining = d.goal - d.current;
+    if (amount >= d.goal) {
+      dynEl.textContent = `Zaplatíte celý inzerát, všech ${formatNumber(d.mailboxes)} schránek`;
+    } else if (amount >= remaining) {
+      dynEl.textContent = 'Doplatíte zbytek inzerátu';
+    } else {
+      const pct = Math.round((amount / d.goal) * 100);
+      const boxes = mailboxesForAmount(d, amount);
+      dynEl.innerHTML = `Zaplatíte asi ${pct} %<span class="ad-word"> inzerátu</span>, cca ${formatNumber(boxes)} schránek`;
+    }
+  }
+
+  table.addEventListener('input', (e) => {
+    if (!e.target.matches('.district-input')) return;
+    const row = e.target.closest('.district-row');
+    const i = Number(row.dataset.index);
+    const value = parseAmount(e.target.value);
+    amounts[i] = value;
+    e.target.value = value ? formatNumber(value) : '';
+    updateDynamic(i);
+  });
+
+  table.addEventListener('click', (e) => {
+    const btn = e.target.closest('.district-btn');
+    if (!btn || btn.disabled) return;
+    const row = btn.closest('.district-row');
+    const i = Number(row.dataset.index);
+    openPayment(i);
+  });
+
+  DISTRICTS.forEach((_, i) => updateDynamic(i));
+
+  // Cíl a počet schránek jsou statické (z konfigurace), takže se dají
+  // spočítat hned. "Vybráno" a počet dárců čekají na /stav.json.
+  const totalGoal = DISTRICTS.reduce((sum, d) => sum + d.goal, 0);
+  const totalMailboxes = DISTRICTS.reduce((sum, d) => sum + d.mailboxes, 0);
+  document.getElementById('totalMailboxes').textContent = formatNumber(totalMailboxes);
+
+  // Aktualizuje bar/text jednoho řádku podle d.current, beze změny toho, co
+  // uživatel případně už napsal do pole s částkou.
+  function updateRowStatus(i) {
+    const d = DISTRICTS[i];
+    const row = table.querySelector(`.district-row[data-index="${i}"]`);
+    if (!row) return;
+    const isPaid = d.current >= d.goal;
+    const pct = Math.round((d.current / d.goal) * 100);
+    const barWidth = isPaid ? 100 : Math.min(pct, 100);
+    const remaining = d.goal - d.current;
+    const statusText = isPaid ? ' · Zaplaceno' : ` · chybí ${formatNumber(remaining)}`;
+
+    row.classList.toggle('paid', isPaid);
+    const barFill = row.querySelector('.district-bar-fill');
+    barFill.classList.toggle('paid', isPaid);
+    barFill.style.width = barWidth + '%';
+    row.querySelector('.district-money-col').textContent =
+      `Vybráno ${formatNumber(d.current)} z ${formatNumber(d.goal)} Kč${statusText}`;
+    row.querySelector('.district-btn').classList.toggle('secondary', isPaid);
+    updateDynamic(i);
+  }
+
+  function renderTotals() {
+    const totalRaised = DISTRICTS.reduce((sum, d) => sum + d.current, 0);
+    document.getElementById('totalRaised').textContent = formatNumber(totalRaised);
+    document.getElementById('totalProgressFill').style.width =
+      Math.min(100, totalGoal ? (totalRaised / totalGoal) * 100 : 0) + '%';
+  }
+  renderTotals();
+
+  // Načtení /stav.json — jedinkrát při načtení stránky, dál se během
+  // návštěvy nic netahá. Když se nenačte, stránka zůstává s cíli
+  // z konfigurace a prázdnými bary (current zůstává 0) — rozbitá tabulka
+  // by byla horší než tabulka bez čísel.
+  //
+  // Výjimka z cache: návrat z platby kartou (Stripe redirect na
+  // ?dar=1) načte stav.json znovu s náhodným parametrem, ať dárce
+  // hned vidí svůj příspěvek v baru své čtvrti.
+  (function loadStav() {
+    const cameBackFromPayment = new URLSearchParams(window.location.search).get('dar') === '1';
+    const url = cameBackFromPayment ? `/stav.json?t=${Date.now()}` : '/stav.json';
+    fetch(url, { cache: cameBackFromPayment ? 'no-store' : 'default' })
+      .then(r => r.ok ? r.json() : null)
+      .then(applyStav)
+      .catch(() => { /* necháme cíle z konfigurace a prázdné bary */ });
+  })();
+
+  function applyStav(stav) {
+    if (!stav || typeof stav !== 'object' || !stav.mc) return;
+    DISTRICTS.forEach((d, i) => {
+      const s = stav.mc[d.mcKey];
+      if (s && typeof s.vybrano === 'number') {
+        d.current = s.vybrano;
+        updateRowStatus(i);
+      }
+    });
+    if (stav.celkem) {
+      if (typeof stav.celkem.vybrano === 'number') {
+        // Celkem počítáme ze čtvrtí (renderTotals), ale kdyby /stav.json
+        // obsahoval i čtvrť, kterou frontend nezná, použijeme raději jeho
+        // vlastní součet — je autoritativní.
+        document.getElementById('totalRaised').textContent = formatNumber(stav.celkem.vybrano);
+        document.getElementById('totalProgressFill').style.width =
+          Math.min(100, totalGoal ? (stav.celkem.vybrano / totalGoal) * 100 : 0) + '%';
+      }
+      if (typeof stav.celkem.darcu === 'number') {
+        document.getElementById('donorCount').textContent = formatNumber(stav.celkem.darcu);
+      }
+    } else {
+      renderTotals();
+    }
+  }
+
+  // ============ PLATBA ============
+  // Platební část se objeví až po kliknutí na Přispět u konkrétní čtvrti —
+  // do té doby zůstává skrytá. Zůstává ale na stejné stránce (žádný přechod
+  // na novou stránku), jen se k ní plynule doscrolluje.
+  const paymentView = document.getElementById('paymentView');
+  const recapText = document.getElementById('recapText');
+  const changeBtn = document.getElementById('changeBtn');
+  const donorForm = document.getElementById('donorForm');
+  const successBox = document.getElementById('successBox');
+  const errorBox = document.getElementById('formError');
+  const submitBtn = document.getElementById('paySubmitBtn');
+  const originalBtnHTML = submitBtn.innerHTML;
+
+  function describeContribution(d, amount) {
+    const amountStr = `<strong>${formatNumber(amount)} Kč</strong>`;
+    const isPaid = d.current >= d.goal;
+    if (isPaid) {
+      return `Váš dar ve výši ${amountStr} pro <strong>${d.name}</strong> použijeme tam, kde inzerce ještě chybí.`;
+    }
+    const remaining = d.goal - d.current;
+    if (amount >= d.goal) {
+      return `Váš dar ve výši ${amountStr} zaplatí celý inzerát pro <strong>${d.name}</strong> — všech <strong>${formatNumber(d.mailboxes)} schránek</strong>.`;
+    }
+    if (amount >= remaining) {
+      return `Váš dar ve výši ${amountStr} doplatí zbytek inzerátu pro <strong>${d.name}</strong>.`;
+    }
+    const boxes = mailboxesForAmount(d, amount);
+    return `Váš dar ve výši ${amountStr} přispěje na inzerát do <strong>cca ${formatNumber(boxes)} schránek</strong> pro <strong>${d.name}</strong>.`;
+  }
+
+  function openPayment(i) {
+    lastDistrictIndex = i;
+    const d = DISTRICTS[i];
+    recapText.innerHTML = describeContribution(d, amounts[i]);
+    errorBox.classList.remove('visible');
+    successBox.classList.remove('visible');
+    donorForm.style.display = '';
+    table.querySelectorAll('.district-row.selected').forEach(r => r.classList.remove('selected'));
+    const rowEl = table.querySelector(`.district-row[data-index="${i}"]`);
+    if (rowEl) rowEl.classList.add('selected');
+    paymentView.classList.add('visible');
+    paymentView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  changeBtn.addEventListener('click', () => {
+    paymentView.classList.remove('visible');
+    table.querySelectorAll('.district-row.selected').forEach(r => r.classList.remove('selected'));
+    if (lastDistrictIndex !== null) {
+      const d = DISTRICTS[lastDistrictIndex];
+      const el = document.getElementById('ctvrt-' + slug(d.name));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+
+  // Přepínač platební metody
+  const methodBtns = document.querySelectorAll('.method-btn');
+  let paymentMethod = 'transfer';
+  methodBtns.forEach(b => {
+    b.addEventListener('click', () => {
+      paymentMethod = b.dataset.method;
+      methodBtns.forEach(x => x.classList.toggle('active', x === b));
+      submitBtn.innerHTML = paymentMethod === 'card'
+        ? 'Zaplatit kartou →'
+        : 'Zobrazit údaje k platbě →';
+    });
+  });
+
+  // SPD ("QR Platba") — český standard pro QR platební kódy, viz Česká
+  // bankovní asociace. Vyžaduje IBAN uvnitř pole ACC, ne číslo účtu ve
+  // tvaru předčíslí-číslo/kód banky.
+  function renderQr(amount, vs) {
+    const spd = `SPD*1.0*ACC:${BANK_IBAN}*AM:${amount.toFixed(2)}*CC:CZK*X-VS:${vs}*MSG:dar`;
+    const qr = qrcode(0, 'M');
+    qr.addData(spd);
+    qr.make();
+    document.getElementById('qrCode').innerHTML = qr.createSvgTag(5);
+  }
+
+  function collectDonor() {
+    return {
+      type: 'person',
+      name: document.getElementById('firstName').value.trim(),
+      surname: document.getElementById('lastName').value.trim(),
+      birth: document.getElementById('birth').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      mobile: document.getElementById('phone').value.trim(),
+      address: document.getElementById('street').value.trim(),
+      city: document.getElementById('city').value.trim(),
+      zip: document.getElementById('zip').value.trim(),
+    };
+  }
+
+  donorForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.remove('visible');
+
+    if (lastDistrictIndex === null) return;
+    const d = DISTRICTS[lastDistrictIndex];
+    const amount = amounts[lastDistrictIndex];
+    if (!amount || amount < MIN_DONATION) return; // tlačítko by v tu chvíli mělo být disabled
+
+    const donor = collectDonor();
+
+    // ---- Platba kartou -> Stripe Checkout (jednorázová platba) --------------
+    if (paymentMethod === 'card') {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Přesměrovávám na platební bránu…';
+      try {
+        const resp = await fetch(CHECKOUT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mc: d.mcKey, amount, donor, tracking: TRACKING }),
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        if (!data.url) throw new Error('Chybí platební URL');
+        window.location.href = data.url;
+      } catch (err) {
+        console.error('Checkout error:', err);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHTML;
+        errorBox.innerHTML = 'Platbu kartou se nepodařilo zahájit. Zkuste to prosím znovu, nebo nás kontaktujte na <a href="mailto:' + ERROR_CONTACT + '">' + ERROR_CONTACT + '</a>.';
+        errorBox.classList.add('visible');
+      }
+      return;
+    }
+
+    // ---- Platba převodem -----------------------------------------------------
+    // Pořadí stejné jako u hlavního darovacího toku na index.html: log
+    // (dary.jsonl) a Action Network se odpálí spolu bez čekání, teprve
+    // pak se čeká na VS z API dary.zeleni.cz.
+    (function logDonation() {
+      fetch(LOG_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mc: d.mcKey, amount, method: 'prevod', donor }),
+        keepalive: true,
+      })
+        .then(() => fetch(`/stav.json?t=${Date.now()}`, { cache: 'no-store' }))
+        .then(r => r.ok ? r.json() : null)
+        .then(applyStav)
+        .catch(err => console.warn('Log/refresh dárcovství selhal:', err));
+    })();
+
+    (function submitToActionNetwork() {
+      const tags = [AN_TAG_COMMON, AN_TAG_COMMON + '-' + d.mcKey];
+      const anBody = {
+        person: {
+          given_name: donor.name,
+          family_name: donor.surname,
+          email_addresses: [{ address: donor.email }],
+          phone_numbers: donor.mobile ? [{ number: donor.mobile }] : undefined,
+          postal_addresses: [{
+            address_lines: donor.address ? [donor.address] : undefined,
+            locality: donor.city,
+            postal_code: donor.zip,
+            country: 'CZ',
+          }],
+          custom_fields: {
+            datum_narozeni: donor.birth,
+            castka_daru: amount,
+            mc: d.mcKey,
+            mc_nazev: d.name,
+            zpusob_platby: 'prevod',
+            utm_source: TRACKING.utm_source,
+            utm_medium: TRACKING.utm_medium,
+            utm_campaign: TRACKING.utm_campaign,
+            utm_content: TRACKING.utm_content,
+            utm_term: TRACKING.utm_term,
+          },
+        },
+        'action_network:referrer_data': {
+          source: TRACKING.utm_source || 'lepsibrno.cz',
+          referrer: TRACKING.referrer,
+          website: TRACKING.landing_page,
+        },
+        add_tags: tags,
+        triggers: { autoresponse: { enabled: false } },
+      };
+      fetch(AN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(anBody),
+        keepalive: true,
+      }).catch(err => console.warn('Action Network submit failed:', err));
+    })();
+
+    const payload = {
+      fund: FUND_ID,
+      donor,
+      payment: { method: 'transfer', amount, periodical: false },
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Odesílám…';
+
+    try {
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      const vs = data.vs || '—';
+
+      document.getElementById('payAccount').textContent = BANK_ACCOUNT;
+      document.getElementById('payVs').textContent = vs;
+      document.getElementById('payAmount').textContent = formatNumber(amount);
+      if (vs !== '—') renderQr(amount, vs);
+
+      donorForm.style.display = 'none';
+      successBox.classList.add('visible');
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      console.error('Submit error:', err);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHTML;
+      errorBox.innerHTML = 'Něco se pokazilo. Zkuste to prosím znovu, nebo nás kontaktujte na <a href="mailto:' + ERROR_CONTACT + '">' + ERROR_CONTACT + '</a>.';
+      errorBox.classList.add('visible');
+    }
+  });
+
+  // Kopírování platebních údajů do schránky
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const target = document.getElementById(btn.dataset.copyTarget);
+      if (!target) return;
+      const text = target.textContent.trim();
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      const orig = btn.textContent;
+      btn.textContent = 'Zkopírováno ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

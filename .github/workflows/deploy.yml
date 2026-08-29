@@ -51,5 +51,7 @@ jobs:
             config.template.php
             config.local.php
             matching-status.json
+            stav.json
+            server-data/**
             .env
             .env.*

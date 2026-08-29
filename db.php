@@ -96,12 +96,66 @@ function donor_db(): PDO {
         )
     ");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_recurring_created ON recurring_synced(dary_created_at)");
+    // Jednorázové dary na čtvrť (ctvrte.html — inzerce v radničních
+    // zpravodajích). Souhrn bez osobních údajů žije v /data/dary.jsonl +
+    // /stav.json (mc-store.php) — tohle je jen admin evidence PRO
+    // transakce.php, ať jde dohledat, kdo a kdy skutečně přispěl. Zapisuje
+    // se v log-district-donation.php (převod) a stripe-webhook.php (karta),
+    // vždy spolu s mc_append_donation() do dary.jsonl.
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS district_donations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            mc TEXT NOT NULL,
+            mc_nazev TEXT,
+            payment_method TEXT NOT NULL,
+            amount INTEGER,
+            donor_name TEXT,
+            donor_surname TEXT,
+            donor_email TEXT,
+            donor_phone TEXT,
+            donor_city TEXT,
+            variable_symbol TEXT,
+            stripe_session_id TEXT
+        )
+    ");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_district_donations_mc ON district_donations(mc)");
+    $pdo->exec("CREATE INDEX IF NOT EXISTS idx_district_donations_created ON district_donations(created_at)");
     // Shoda se seznamem telefundraisingu (viz refresh_telefundraising_matches) —
     // sloupec musí existovat hned, i než poprvé proběhne přepočet.
     foreach (['donors', 'onetime_synced', 'recurring_synced'] as $table) {
         ensure_column($pdo, $table, 'tf_match', 'INTEGER NOT NULL DEFAULT 0');
     }
     return $pdo;
+}
+
+/**
+ * Zapíše dar na čtvrť do admin evidence (district_donations). Vrátí ID
+ * nového řádku nebo null při chybě. Volá se VEDLE mc_append_donation()
+ * (mc-store.php) — ta píše do dary.jsonl/stav.json bez osobních údajů,
+ * tahle tabulka je jen pro dohledání konkrétního dárce v transakce.php.
+ */
+function record_district_donation(array $data): ?int {
+    $cols = [
+        'mc', 'mc_nazev', 'payment_method', 'amount',
+        'donor_name', 'donor_surname', 'donor_email', 'donor_phone', 'donor_city',
+        'variable_symbol', 'stripe_session_id',
+    ];
+    try {
+        $pdo = donor_db();
+        $placeholders = implode(',', array_map(fn($c) => ':' . $c, $cols));
+        $sql = 'INSERT INTO district_donations (' . implode(',', $cols) . ") VALUES ($placeholders)";
+        $stmt = $pdo->prepare($sql);
+        $params = [];
+        foreach ($cols as $c) {
+            $params[':' . $c] = $data[$c] ?? null;
+        }
+        $stmt->execute($params);
+        return (int)$pdo->lastInsertId();
+    } catch (Throwable $e) {
+        error_log('record_district_donation error: ' . $e->getMessage());
+        return null;
+    }
 }
 
 /**

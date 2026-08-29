@@ -61,6 +61,102 @@ $m       = $session['metadata'] ?? [];
 $amount  = (int)($m['amount'] ?? 0);
 $email   = (string)($m['donor_email'] ?? '');
 
+// Jednorázový dar na konkrétní čtvrť (create-district-checkout.php,
+// ctvrte.html) — pozná se podle "mc" v metadatech a jde úplně jinou
+// větví: log do dary.jsonl (mc-store.php), pak Action Network se
+// společným tagem + tagem čtvrti. Pořadí log → AN je stejné jako
+// u převodu (viz log-district-donation.php).
+$mcKey = (string)($m['mc'] ?? '');
+if ($mcKey !== '') {
+    require __DIR__ . '/mc-store.php';
+
+    try {
+        mc_append_donation($mcKey, $amount, 'karta');
+    } catch (Throwable $e) {
+        error_log('stripe-webhook mc_append_donation error: ' . $e->getMessage());
+    }
+
+    // Admin evidence (transakce.php) — nekritická, dar je v dary.jsonl
+    // zapsaný už výše bez ohledu na výsledek tohohle zápisu.
+    record_district_donation([
+        'mc'                 => $mcKey,
+        'mc_nazev'           => $m['mc_nazev'] ?? $mcKey,
+        'payment_method'     => 'karta',
+        'amount'             => $amount,
+        'donor_name'         => $m['donor_name'] ?? null,
+        'donor_surname'      => $m['donor_surname'] ?? null,
+        'donor_email'        => $email ?: null,
+        'donor_phone'        => $m['donor_phone'] ?? null,
+        'donor_city'         => $m['donor_city'] ?? null,
+        'stripe_session_id'  => $session['id'] ?? null,
+    ]);
+
+    if ($config['an_api_token'] !== '' && $email !== '') {
+        $tags = ['brno-2026-noviny'];
+        $mcAnTag = (string)($m['mc_an_tag'] ?? '');
+        if ($mcAnTag !== '') {
+            $tags[] = $mcAnTag;
+        }
+
+        $anBody = [
+            'person' => [
+                'given_name'       => $m['donor_name'] ?? '',
+                'family_name'      => $m['donor_surname'] ?? '',
+                'email_addresses'  => [['address' => $email]],
+                'postal_addresses' => [[
+                    'address_lines' => array_filter([$m['donor_address'] ?? '']),
+                    'locality'      => $m['donor_city'] ?? '',
+                    'postal_code'   => $m['donor_zip'] ?? '',
+                    'country'       => 'CZ',
+                ]],
+                'custom_fields' => [
+                    'datum_narozeni' => $m['donor_birth'] ?? '',
+                    'castka_daru'    => $amount,
+                    'mc'             => $mcKey,
+                    'mc_nazev'       => $m['mc_nazev'] ?? '',
+                    'zpusob_platby'  => 'karta',
+                    'utm_source'     => $m['utm_source'] ?? '',
+                    'utm_medium'     => $m['utm_medium'] ?? '',
+                    'utm_campaign'   => $m['utm_campaign'] ?? '',
+                    'utm_content'    => $m['utm_content'] ?? '',
+                    'utm_term'       => $m['utm_term'] ?? '',
+                ],
+            ],
+            'action_network:referrer_data' => [
+                'source'   => ($m['utm_source'] ?? '') ?: 'lepsibrno.cz',
+                'referrer' => $m['referrer'] ?? '',
+                'website'  => $m['landing_page'] ?? '',
+            ],
+            'add_tags' => $tags,
+            'triggers' => ['autoresponse' => ['enabled' => true]],
+        ];
+        if (!empty($m['donor_phone'])) {
+            $anBody['person']['phone_numbers'] = [['number' => $m['donor_phone']]];
+        }
+
+        $ch = curl_init($config['an_url']);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($anBody, JSON_UNESCAPED_UNICODE),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'OSDI-API-Token: ' . $config['an_api_token'],
+            ],
+            CURLOPT_TIMEOUT        => 15,
+        ]);
+        $anResp   = curl_exec($ch);
+        $anStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($anStatus >= 400) {
+            error_log('Action Network error, dar na čtvrť (' . $anStatus . '): ' . $anResp);
+        }
+    }
+
+    http_response_code(200);
+    exit('OK');
+}
+
 // Počet měsíčních plateb do voleb — sjednoceno s frontendem.
 // Počítáme 1. dny v měsíci od dneška (včetně, pokud je dnes 1.) do volebního dne.
 $monthsLeft = 1;

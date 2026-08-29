@@ -1,0 +1,5 @@
+<IfModule mod_headers.c>
+  <FilesMatch "^stav\.json$">
+    Header set Cache-Control "max-age=30"
+  </FilesMatch>
+</IfModule>

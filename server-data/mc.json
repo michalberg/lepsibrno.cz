@@ -1,0 +1,16 @@
+{
+  "brno-sever": { "nazev": "Brno-sever", "cil": 9000, "schranky": 28000, "an_tag": "brno-2026-noviny-brno-sever", "zaklad": 1500 },
+  "bystrc": { "nazev": "Bystrc", "cil": 11000, "schranky": 13000, "an_tag": "brno-2026-noviny-bystrc", "zaklad": 0 },
+  "cernovice": { "nazev": "Černovice", "cil": 4000, "schranky": 4000, "an_tag": "brno-2026-noviny-cernovice", "zaklad": 800 },
+  "kohoutovice": { "nazev": "Kohoutovice", "cil": 7000, "schranky": 6000, "an_tag": "brno-2026-noviny-kohoutovice", "zaklad": 0 },
+  "komin": { "nazev": "Komín", "cil": 7500, "schranky": 4200, "an_tag": "brno-2026-noviny-komin", "zaklad": 0 },
+  "kralovo-pole": { "nazev": "Královo Pole", "cil": 15000, "schranky": 16100, "an_tag": "brno-2026-noviny-kralovo-pole", "zaklad": 1800 },
+  "lisen": { "nazev": "Líšeň", "cil": 12500, "schranky": 12100, "an_tag": "brno-2026-noviny-lisen", "zaklad": 1200 },
+  "malomerice-a-obrany": { "nazev": "Maloměřice a Obřany", "cil": 1500, "schranky": 2300, "an_tag": "brno-2026-noviny-malomerice-a-obrany", "zaklad": 0 },
+  "novy-liskovec": { "nazev": "Nový Lískovec", "cil": 5000, "schranky": 5000, "an_tag": "brno-2026-noviny-novy-liskovec", "zaklad": 0 },
+  "turany": { "nazev": "Tuřany", "cil": 2000, "schranky": 1100, "an_tag": "brno-2026-noviny-turany", "zaklad": 0 },
+  "vinohrady": { "nazev": "Vinohrady", "cil": 5500, "schranky": 5850, "an_tag": "brno-2026-noviny-vinohrady", "zaklad": 0 },
+  "zabovresky": { "nazev": "Žabovřesky", "cil": 9500, "schranky": 12000, "an_tag": "brno-2026-noviny-zabovresky", "zaklad": 900 },
+  "zebetin": { "nazev": "Žebětín", "cil": 2500, "schranky": 3300, "an_tag": "brno-2026-noviny-zebetin", "zaklad": 0 },
+  "zidenice": { "nazev": "Židenice", "cil": 8000, "schranky": 11600, "an_tag": "brno-2026-noviny-zidenice", "zaklad": 1600 }
+}

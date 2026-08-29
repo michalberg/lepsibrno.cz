@@ -11,6 +11,7 @@ config.local.php
 
 # Runtime artefakty generované serverem
 matching-status.json
+stav.json
 donors.db
 donors.db-journal
 donors.db-wal

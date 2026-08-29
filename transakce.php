@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 $config = require __DIR__ . '/config.php';
 require __DIR__ . '/db.php';
+require __DIR__ . '/mc-store.php';
 
 $adminPassword = (string)($config['admin_password'] ?? '');
 const COOKIE_NAME = 'lb_admin';
@@ -97,6 +98,18 @@ $onetime = $pdo->query('SELECT * FROM onetime_synced ORDER BY dary_created_at DE
 // Pravidelné dary založené přímo na dary.zeleni.cz (mimo lepsibrno.cz).
 // Patří k „předplatnému" → níže je slučujeme s tabulkou donors do součtů i výpisu.
 $recurring = $pdo->query('SELECT * FROM recurring_synced ORDER BY dary_created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
+// Dary na čtvrť (ctvrte.html — inzerce v radničních zpravodajích). Souhrn
+// za čtvrť čteme přímo z /stav.json (přepočítává ho mc-store.php při
+// každém daru, tady není důvod počítat ho znovu) — jednotlivé transakce
+// se jmény dárců z vlastní tabulky district_donations.
+$districtDonations = $pdo->query('SELECT * FROM district_donations ORDER BY created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
+$stavRaw = @file_get_contents(__DIR__ . '/stav.json');
+$stav = $stavRaw !== false ? json_decode($stavRaw, true) : null;
+try {
+    $mcConfig = mc_load_config();
+} catch (Throwable $e) {
+    $mcConfig = [];
+}
 
 // ── Porovnání s telefundraisingem ───────────────────────────────────────────
 // Shoda jména+příjmení s kontakty z telefundraising.php se NEpočítá tady —
@@ -169,8 +182,8 @@ usort($subs, fn($a, $b) => strcmp((string)$b['date'], (string)$a['date']));
 // ── CSV export ─────────────────────────────────────────────────────────────
 if (isset($_GET['export'])) {
     $which = $_GET['export'];
-    $data  = ['onetime' => $onetime, 'recurring' => $recurring][$which] ?? $rows;
-    $name  = ['onetime' => 'jednorazove', 'recurring' => 'pravidelne'][$which] ?? 'transakce';
+    $data  = ['onetime' => $onetime, 'recurring' => $recurring, 'district' => $districtDonations][$which] ?? $rows;
+    $name  = ['onetime' => 'jednorazove', 'recurring' => 'pravidelne', 'district' => 'ctvrte'][$which] ?? 'transakce';
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $name . '-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
@@ -186,6 +199,19 @@ if (isset($_GET['export'])) {
 // Souhrn jednorázových darů
 $onetimeCount = count($onetime);
 $onetimeSum   = array_sum(array_map(fn($r) => (int)($r['amount'] ?? 0), $onetime));
+
+// ── Souhrn darů na čtvrť (ctvrte.html) ──────────────────────────────────────
+// Celkem a rozpad po čtvrtích bereme rovnou z /stav.json (autoritativní,
+// počítá ho mc-store.php ze CELÉHO dary.jsonl včetně zárodečných darů) —
+// district_donations je jen evidence jednotlivých transakcí se jmény, pro
+// součty se nepoužívá, protože zárodečné dary v ní logicky nejsou.
+$districtCount    = count($districtDonations);
+$districtSum      = array_sum(array_map(fn($r) => (int)($r['amount'] ?? 0), $districtDonations));
+$districtCardSum  = array_sum(array_map(fn($r) => $r['payment_method'] === 'karta' ? (int)($r['amount'] ?? 0) : 0, $districtDonations));
+$districtBankSum  = $districtSum - $districtCardSum;
+$districtTotal    = (int)($stav['celkem']['vybrano'] ?? 0);
+$districtGoal     = (int)($stav['celkem']['cil'] ?? array_sum(array_map(fn($d) => (int)($d['cil'] ?? 0), $mcConfig)));
+$districtDonors   = (int)($stav['celkem']['darcu'] ?? 0);
 
 // ── Souhrny předplatného (donors + pravidelné z dary.zeleni.cz) ────────────
 $count          = count($subs);
@@ -391,6 +417,7 @@ function render_login(string $error, bool $notConfigured): void {
       <a class="primary" href="transakce.php?export=csv">⬇ Předplatné CSV</a>
       <?php if ($recurringCount): ?><a class="primary" href="transakce.php?export=recurring">⬇ Pravidelné (dary.zeleni.cz) CSV</a><?php endif; ?>
       <?php if ($onetimeCount): ?><a class="primary" href="transakce.php?export=onetime">⬇ Jednorázové CSV</a><?php endif; ?>
+      <?php if ($districtCount): ?><a class="primary" href="transakce.php?export=district">⬇ Dary na čtvrti CSV</a><?php endif; ?>
       <a class="ghost" href="transakce.php?logout=1">Odhlásit</a>
     </div>
   </header>
@@ -414,6 +441,74 @@ function render_login(string $error, bool $notConfigured): void {
       <div class="muted" style="font-size:.8rem;margin-top:.15rem">Poplatek za kartu (3,1 %): −<?= kc($cardFee) ?></div>
     </div>
   </div>
+
+  <h2>Dary na čtvrti <span class="muted">(inzerce v radničních zpravodajích, ctvrte.html — aktuální kampaň)</span></h2>
+  <?php if ($stav === null): ?>
+    <div class="empty">/stav.json ještě neexistuje — spusť jednou <code>rebuild-stav.php</code>, nebo počkej na první dar.</div>
+  <?php endif; ?>
+  <div class="cards">
+    <div class="card"><div class="label">Vybráno / cíl</div><div class="value"><?= kc($districtTotal) ?></div>
+      <div class="muted" style="font-size:.8rem;margin-top:.25rem">z <?= kc($districtGoal) ?></div>
+    </div>
+    <div class="card"><div class="label">Dárců (dary.jsonl)</div><div class="value"><?= $districtDonors ?></div></div>
+    <div class="card"><div class="label">Transakcí v evidenci</div><div class="value"><?= $districtCount ?></div>
+      <div class="muted" style="font-size:.8rem;margin-top:.25rem">karta <?= kc($districtCardSum) ?> · převod <?= kc($districtBankSum) ?></div>
+    </div>
+  </div>
+
+  <?php if ($stav !== null && $mcConfig): ?>
+  <h3 style="font-size:.95rem;margin:1.5rem 0 .6rem;color:var(--muted)">Podle čtvrti</h3>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Čtvrť</th><th class="num">Vybráno</th><th class="num">Cíl</th><th class="num">%</th><th class="num">Schránky</th></tr></thead>
+      <tbody>
+      <?php foreach ($mcConfig as $mcKey => $d):
+        $s = $stav['mc'][$mcKey] ?? ['vybrano' => 0, 'cil' => (int)($d['cil'] ?? 0), 'schranky' => (int)($d['schranky'] ?? 0)];
+        $pct = $s['cil'] > 0 ? round($s['vybrano'] / $s['cil'] * 100) : 0;
+      ?>
+        <tr>
+          <td><?= h((string)($d['nazev'] ?? $mcKey)) ?></td>
+          <td class="num"><?= kc((int)$s['vybrano']) ?></td>
+          <td class="num"><?= kc((int)$s['cil']) ?></td>
+          <td class="num"><?= $pct ?> %</td>
+          <td class="num"><?= number_format((int)$s['schranky'], 0, ',', ' ') ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php endif; ?>
+
+  <h3 style="font-size:.95rem;margin:1.5rem 0 .6rem;color:var(--muted)">Jednotlivé transakce <span class="muted">(bez šesti zárodečných darů — ty jsou zapsané přímo v dary.jsonl, ne přes formulář)</span></h3>
+  <?php if (!$districtDonations): ?>
+    <div class="empty">Zatím žádné transakce.</div>
+  <?php else: ?>
+  <div class="scroll">
+    <table>
+      <thead><tr>
+        <th>Datum</th><th>Metoda</th><th>Čtvrť</th><th class="num">Částka</th>
+        <th>Jméno</th><th>E-mail</th><th>Telefon</th>
+      </tr></thead>
+      <tbody>
+      <?php foreach ($districtDonations as $r):
+        $m = $r['payment_method'];
+        $micon  = $m === 'karta' ? '💳' : ($m === 'prevod' ? '🏦' : '•');
+        $mlabel = $m === 'karta' ? 'Karta' : ($m === 'prevod' ? 'Převod' : $m);
+      ?>
+        <tr>
+          <td class="muted"><?= h(substr((string)$r['created_at'], 0, 16)) ?></td>
+          <td style="text-align:center" title="<?= h($mlabel) ?>"><?= $micon ?></td>
+          <td><?= h((string)($r['mc_nazev'] ?: $r['mc'])) ?></td>
+          <td class="num"><?= $r['amount'] !== null ? kc((int)$r['amount']) : '—' ?></td>
+          <td><?= h(trim(($r['donor_name'] ?? '') . ' ' . ($r['donor_surname'] ?? ''))) ?></td>
+          <td><?= h($r['donor_email']) ?></td>
+          <td><?= h($r['donor_phone']) ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <?php endif; ?>
 
   <h2>Předplatné <span class="muted">(<?= $count ?>)</span></h2>
 

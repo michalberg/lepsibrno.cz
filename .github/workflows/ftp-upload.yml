@@ -26,7 +26,7 @@ jobs:
           REMOTE="lepsibrno.cz/public_html"
           OPTS="set ssl:verify-certificate no; set ssl:check-hostname no; set ftp:ssl-allow true; set ftp:ssl-protect-data true; set ftp:use-pasv-address no; set net:timeout 15; set net:max-retries 2;"
           CMDS="$OPTS"
-          for f in transakce.php sync-onetime.php db.php create-checkout.php stripe-webhook.php log-donor.php index.html dekujeme.html; do
+          for f in transakce.php sync-onetime.php db.php create-checkout.php stripe-webhook.php log-donor.php index.html dekujeme.html mc-store.php log-district-donation.php create-district-checkout.php rebuild-stav.php ctvrte.html; do
             CMDS="$CMDS put -O $REMOTE $f;"
           done
           CMDS="$CMDS bye"
