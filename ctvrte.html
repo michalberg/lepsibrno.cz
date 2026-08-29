@@ -512,7 +512,7 @@
         </div>
 
         <div class="instructions-note">
-          Do zprávy pro příjemce napiš <strong>„dar"</strong> — je to zákonný požadavek.
+          Do zprávy pro příjemce napiš <strong>„Dar pro Brno"</strong> — je to zákonný požadavek.
         </div>
       </div>
     </div>
@@ -867,7 +867,7 @@
   // bankovní asociace. Vyžaduje IBAN uvnitř pole ACC, ne číslo účtu ve
   // tvaru předčíslí-číslo/kód banky.
   function renderQr(amount, vs) {
-    const spd = `SPD*1.0*ACC:${BANK_IBAN}*AM:${amount.toFixed(2)}*CC:CZK*X-VS:${vs}*MSG:dar`;
+    const spd = `SPD*1.0*ACC:${BANK_IBAN}*AM:${amount.toFixed(2)}*CC:CZK*X-VS:${vs}*MSG:Dar pro Brno`;
     const qr = qrcode(0, 'M');
     qr.addData(spd);
     qr.make();
