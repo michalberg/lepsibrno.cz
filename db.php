@@ -96,7 +96,7 @@ function donor_db(): PDO {
         )
     ");
     $pdo->exec("CREATE INDEX IF NOT EXISTS idx_recurring_created ON recurring_synced(dary_created_at)");
-    // Jednorázové dary na čtvrť (ctvrte.html — inzerce v radničních
+    // Jednorázové dary na čtvrť (index.html — inzerce v radničních
     // zpravodajích). Souhrn bez osobních údajů žije v /data/dary.jsonl +
     // /stav.json (mc-store.php) — tohle je jen admin evidence PRO
     // transakce.php, ať jde dohledat, kdo a kdy skutečně přispěl. Zapisuje

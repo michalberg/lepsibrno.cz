@@ -16,14 +16,16 @@ return [
     'allowed_amounts'       => [199, 339, 599],
 
     // Návratové URL po platbě / zrušení
+    // Měsíční předplatné teď žije na predplatne.html (index.html patří
+    // kampani na čtvrti, viz níže).
     'success_url'           => 'https://lepsibrno.cz/dekujeme.html?session_id={CHECKOUT_SESSION_ID}',
-    'cancel_url'            => 'https://lepsibrno.cz/#predplatit',
+    'cancel_url'            => 'https://lepsibrno.cz/predplatne.html#predplatit',
 
-    // Totéž pro jednorázové dary na čtvrť (ctvrte.html, create-district-checkout.php).
+    // Totéž pro jednorázové dary na čtvrť (index.html, create-district-checkout.php).
     // ?dar=1 na success URL říká frontendu, ať /stav.json stáhne znovu bez cache
     // (viz zadání), aby dárce hned viděl svůj příspěvek v baru své čtvrti.
-    'success_url_ctvrte'    => 'https://lepsibrno.cz/ctvrte.html?dar=1',
-    'cancel_url_ctvrte'     => 'https://lepsibrno.cz/ctvrte.html',
+    'success_url_ctvrte'    => 'https://lepsibrno.cz/?dar=1',
+    'cancel_url_ctvrte'     => 'https://lepsibrno.cz/',
 
     // Heslo do administrace (stránka /transakce.php). Nastav přes GitHub Secret ADMIN_PASSWORD.
     'admin_password'        => '__ADMIN_PASSWORD__',

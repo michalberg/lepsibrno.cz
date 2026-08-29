@@ -1,7 +1,7 @@
 <?php
 /**
  * Vytvoří Stripe Checkout Session pro JEDNORÁZOVÝ dar na inzerci v jedné
- * čtvrti (stránka ctvrte.html) a vrátí platební URL.
+ * čtvrti (stránka index.html) a vrátí platební URL.
  *
  * Na rozdíl od create-checkout.php (měsíční předplatné) je mode='payment',
  * částka je volná (ne z pevného seznamu) a metadata nesou čtvrť (mc + její

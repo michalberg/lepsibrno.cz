@@ -3,7 +3,7 @@ name: Seed district data (jednorázově)
 # Nahraje server-data/mc.json a server-data/dary.jsonl do ../data/ na
 # serveru (mimo webroot public_html/, mimo běžný git/FTP deploy).
 #
-# POZOR: spouštět JEN JEDNOU, před prvním darem na čtvrť (ctvrte.html).
+# POZOR: spouštět JEN JEDNOU, před prvním darem na čtvrť (index.html).
 # Po prvním reálném daru by opakované spuštění přepsalo /data/dary.jsonl
 # zpátky na těch 6 zárodečných záznamů a smazalo tak všechny mezitím
 # přijaté dary — proto vyžaduje ruční potvrzení textem "ano".

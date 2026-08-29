@@ -1,7 +1,7 @@
 <?php
 /**
  * Sdílená vrstva pro ukládání darů na jednotlivé městské části (kampaň
- * "radniční zpravodaje", stránka ctvrte.html).
+ * "radniční zpravodaje", stránka index.html).
  *
  * /data/ leží mimo webroot (o úroveň výš než tento soubor, stejně jako
  * donors.db v db.php) — git deploy na něj nikdy nesahá, takže se dary.jsonl

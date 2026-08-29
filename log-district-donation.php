@@ -1,6 +1,6 @@
 <?php
 /**
- * Zapíše jednorázový dar na konkrétní čtvrť (stránka ctvrte.html) do
+ * Zapíše jednorázový dar na konkrétní čtvrť (stránka index.html) do
  * /data/dary.jsonl (přepočte /stav.json) a zároveň do admin evidence
  * district_donations (SQLite, viz db.php) — ta drží i osobní údaje dárce,
  * ať jde transakci dohledat v transakce.php. dary.jsonl žádné osobní

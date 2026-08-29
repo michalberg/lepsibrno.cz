@@ -1,7 +1,7 @@
 <?php
 /**
  * Jednorázově založí v Action Networku tagy potřebné pro kampaň na čtvrti
- * (ctvrte.html) — společný "brno-2026-noviny" + "brno-2026-noviny-<čtvrť>"
+ * (index.html) — společný "brno-2026-noviny" + "brno-2026-noviny-<čtvrť>"
  * pro každou čtvrť z mc.json.
  *
  * DŮLEŽITÉ: tag v AN musí existovat PŘED prvním použitím v add_tags.
@@ -83,7 +83,7 @@ try {
 }
 
 // Společný tag + tag každé čtvrti — přesně hodnoty z mc.json (an_tag),
-// stejné jako počítá klient (ctvrte.html) i stripe-webhook.php.
+// stejné jako počítá klient (index.html) i stripe-webhook.php.
 $tags = ['brno-2026-noviny'];
 foreach ($mcConfig as $d) {
     $tag = trim((string)($d['an_tag'] ?? ''));

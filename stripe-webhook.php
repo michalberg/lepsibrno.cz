@@ -62,7 +62,7 @@ $amount  = (int)($m['amount'] ?? 0);
 $email   = (string)($m['donor_email'] ?? '');
 
 // Jednorázový dar na konkrétní čtvrť (create-district-checkout.php,
-// ctvrte.html) — pozná se podle "mc" v metadatech a jde úplně jinou
+// index.html) — pozná se podle "mc" v metadatech a jde úplně jinou
 // větví: log do dary.jsonl (mc-store.php), pak Action Network se
 // společným tagem + tagem čtvrti. Pořadí log → AN je stejné jako
 // u převodu (viz log-district-donation.php).

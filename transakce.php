@@ -98,7 +98,7 @@ $onetime = $pdo->query('SELECT * FROM onetime_synced ORDER BY dary_created_at DE
 // Pravidelné dary založené přímo na dary.zeleni.cz (mimo lepsibrno.cz).
 // Patří k „předplatnému" → níže je slučujeme s tabulkou donors do součtů i výpisu.
 $recurring = $pdo->query('SELECT * FROM recurring_synced ORDER BY dary_created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
-// Dary na čtvrť (ctvrte.html — inzerce v radničních zpravodajích). Souhrn
+// Dary na čtvrť (index.html — inzerce v radničních zpravodajích). Souhrn
 // za čtvrť čteme přímo z /stav.json (přepočítává ho mc-store.php při
 // každém daru, tady není důvod počítat ho znovu) — jednotlivé transakce
 // se jmény dárců z vlastní tabulky district_donations.
@@ -200,7 +200,7 @@ if (isset($_GET['export'])) {
 $onetimeCount = count($onetime);
 $onetimeSum   = array_sum(array_map(fn($r) => (int)($r['amount'] ?? 0), $onetime));
 
-// ── Souhrn darů na čtvrť (ctvrte.html) ──────────────────────────────────────
+// ── Souhrn darů na čtvrť (index.html) ──────────────────────────────────────
 // Celkem a rozpad po čtvrtích bereme rovnou z /stav.json (autoritativní,
 // počítá ho mc-store.php ze CELÉHO dary.jsonl včetně zárodečných darů) —
 // district_donations je jen evidence jednotlivých transakcí se jmény, pro
@@ -442,7 +442,7 @@ function render_login(string $error, bool $notConfigured): void {
     </div>
   </div>
 
-  <h2>Dary na čtvrti <span class="muted">(inzerce v radničních zpravodajích, ctvrte.html — aktuální kampaň)</span></h2>
+  <h2>Dary na čtvrti <span class="muted">(inzerce v radničních zpravodajích, index.html — aktuální kampaň)</span></h2>
   <?php if ($stav === null): ?>
     <div class="empty">/stav.json ještě neexistuje — spusť jednou <code>rebuild-stav.php</code>, nebo počkej na první dar.</div>
   <?php endif; ?>

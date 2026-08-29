@@ -26,13 +26,18 @@ jobs:
           REMOTE="lepsibrno.cz/public_html"
           OPTS="set ssl:verify-certificate no; set ssl:check-hostname no; set ftp:ssl-allow true; set ftp:ssl-protect-data true; set ftp:use-pasv-address no; set net:timeout 15; set net:max-retries 2;"
           CMDS="$OPTS"
-          for f in transakce.php sync-onetime.php db.php create-checkout.php stripe-webhook.php log-donor.php index.html dekujeme.html mc-store.php log-district-donation.php create-district-checkout.php rebuild-stav.php create-an-tags.php ctvrte.html .htaccess; do
+          for f in transakce.php sync-onetime.php db.php create-checkout.php stripe-webhook.php log-donor.php index.html predplatne.html dekujeme.html mc-store.php log-district-donation.php create-district-checkout.php rebuild-stav.php create-an-tags.php .htaccess; do
             CMDS="$CMDS put -O $REMOTE $f;"
           done
           CMDS="$CMDS mkdir -p $REMOTE/assets;"
-          for f in assets/hvezdicka-crop.png assets/logo-zelene-brno-crop.png assets/refren-crop.png assets/qrcode.js; do
+          for f in assets/hvezdicka-crop.png assets/logo-zelene-brno-crop.png assets/refren-crop.png assets/qrcode.js assets/og-ctvrte.png; do
             CMDS="$CMDS put -O $REMOTE/assets $f;"
           done
+          # Jednorázový úklid: index.html teď patří kampani na čtvrti (dřív
+          # ctvrte.html), starý duplicitní soubor na serveru smažeme. lftp
+          # rm -f nevrátí chybu, i když soubor už neexistuje — bezpečné
+          # nechat natrvalo i v dalších deployích.
+          CMDS="$CMDS rm -f $REMOTE/ctvrte.html;"
           CMDS="$CMDS bye"
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$CMDS"
           echo "✓ nahráno"
