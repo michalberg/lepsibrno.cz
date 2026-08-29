@@ -22,6 +22,55 @@
   html { background: #022815; }
   body { font-family: 'UrbanGrotesk', sans-serif; background: #022815; color: #022815; overflow-x: hidden; }
 
+  /* ============ PODĚKOVÁNÍ PO NÁVRATU Z PLATBY (KARTA) ============ */
+  .thanks-banner { display: none; background: #022815; position: relative; overflow: hidden; }
+  .thanks-banner.visible { display: block; }
+  .thanks-banner::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 85% 0%, rgba(11,210,111,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 60% at 10% 100%, rgba(255,166,209,0.10) 0%, transparent 60%);
+  }
+  .thanks-inner {
+    position: relative; max-width: 640px; margin: 0 auto; padding: 48px 56px;
+    text-align: center;
+  }
+  .thanks-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+    font-size: 20px; line-height: 1; cursor: pointer;
+  }
+  .thanks-close:hover { background: rgba(255,255,255,0.16); color: #fff; }
+  .thanks-badge {
+    width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%;
+    background: var(--color-green); color: #022815;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 900;
+    box-shadow: 0 0 0 8px rgba(11,210,111,0.14);
+  }
+  .thanks-eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--color-green); margin-bottom: 12px;
+  }
+  .thanks-title {
+    font-family: 'SVGDEurotype', serif; font-style: italic; font-weight: 600;
+    font-size: clamp(26px, 3.4vw, 36px); color: #fff; margin-bottom: 14px;
+  }
+  .thanks-lead { font-size: 15px; line-height: 1.55; color: #d9d9d9; max-width: 460px; margin: 0 auto 24px; }
+  .thanks-actions { display: flex; justify-content: center; }
+  .thanks-share {
+    background: var(--color-green); color: #022815; border: none;
+    padding: 13px 28px; border-radius: 6px; font-size: 15px; font-weight: 800;
+    cursor: pointer; font-family: 'UrbanGrotesk', sans-serif;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .thanks-share:hover { background: #09b060; transform: translateY(-1px); }
+  .thanks-share.copied { background: #d9d9d9; }
+  @media (max-width: 500px) {
+    .thanks-inner { padding: 40px 24px; }
+  }
+
   /* ============ HERO / HLAVIČKA ============ */
   .hero {
     background:
@@ -384,6 +433,19 @@
 </style>
 </head>
 <body>
+
+<div class="thanks-banner" id="thanksBanner">
+  <div class="thanks-inner">
+    <button type="button" class="thanks-close" id="thanksClose" aria-label="Zavřít">×</button>
+    <div class="thanks-badge">✓</div>
+    <p class="thanks-eyebrow">Platba proběhla</p>
+    <h2 class="thanks-title">Díky za tvůj dar!</h2>
+    <p class="thanks-lead">Pomáhá dostat Zelené blíž lidem v tvé čtvrti — díky přímé inzerci, o které se jinak nedozví.</p>
+    <div class="thanks-actions">
+      <button type="button" class="thanks-share" id="thanksShare">Sdílet s přáteli</button>
+    </div>
+  </div>
+</div>
 
 <div id="mainView">
 
@@ -786,6 +848,46 @@
       .then(r => r.ok ? r.json() : null)
       .then(applyStav)
       .catch(() => { /* necháme cíle z konfigurace a prázdné bary */ });
+  })();
+
+  // Poděkování po návratu z platby kartou (Stripe success_url_ctvrte
+  // vede zpátky sem s ?dar=1) — u převodu se nikam neodchází, takže
+  // tenhle panel řeší jen kartu. Po zobrazení se ?dar=1 z URL odstraní,
+  // ať se poděkování neukazuje znovu při obyčejném refreshi stránky.
+  (function showThanksIfReturnedFromPayment() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dar') !== '1') return;
+
+    const banner = document.getElementById('thanksBanner');
+    banner.classList.add('visible');
+
+    params.delete('dar');
+    const rest = params.toString();
+    history.replaceState(null, '', window.location.pathname + (rest ? '?' + rest : ''));
+
+    document.getElementById('thanksClose').addEventListener('click', () => {
+      banner.classList.remove('visible');
+    });
+
+    const shareBtn = document.getElementById('thanksShare');
+    const shareData = {
+      title: 'Doručte lepší Brno do své čtvrti',
+      text: 'Podpořil/a jsem inzerci Zelených v mé čtvrti — přidej se i ty!',
+      url: window.location.origin + window.location.pathname,
+    };
+    shareBtn.addEventListener('click', async () => {
+      if (navigator.share) {
+        try { await navigator.share(shareData); } catch { /* uživatel zrušil, nic se neděje */ }
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        const orig = shareBtn.textContent;
+        shareBtn.textContent = 'Odkaz zkopírován ✓';
+        shareBtn.classList.add('copied');
+        setTimeout(() => { shareBtn.textContent = orig; shareBtn.classList.remove('copied'); }, 1800);
+      } catch { /* clipboard nedostupný — nic víc tu udělat nejde */ }
+    });
   })();
 
   function applyStav(stav) {
