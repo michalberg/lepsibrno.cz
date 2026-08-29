@@ -594,7 +594,9 @@
   function roundMailboxes(x) {
     if (x <= 0) return 0;
     const base = x < 5000 ? 100 : 500;
-    return Math.floor(x / base) * base;
+    // Nikdy neukázat 0 u platného daru (≥ 50 Kč) — u malých částek by
+    // zaokrouhlení dolů jinak spadlo na 0 a působilo by to jako chyba.
+    return Math.max(base, Math.floor(x / base) * base);
   }
 
   function parseAmount(raw) {
