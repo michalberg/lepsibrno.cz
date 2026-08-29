@@ -937,9 +937,10 @@
     }
 
     // ---- Platba převodem -----------------------------------------------------
-    // Pořadí stejné jako u hlavního darovacího toku na index.html: log
-    // (dary.jsonl) a Action Network se odpálí spolu bez čekání, teprve
-    // pak se čeká na VS z API dary.zeleni.cz.
+    // Log (dary.jsonl) se odpálí hned, bez čekání. Action Network se volá
+    // až PO získání VS z API dary.zeleni.cz, ať tam jde poslat i variabilní
+    // symbol — pokud by se VS přesto nepodařilo získat, dárce se do AN
+    // zapíše i tak, jen bez VS (viz catch větev níže).
     (function logDonation() {
       fetch(LOG_URL, {
         method: 'POST',
@@ -953,7 +954,7 @@
         .catch(err => console.warn('Log/refresh dárcovství selhal:', err));
     })();
 
-    (function submitToActionNetwork() {
+    function submitToActionNetwork(vs) {
       const tags = [AN_TAG_COMMON, AN_TAG_COMMON + '-' + d.mcKey];
       const anBody = {
         person: {
@@ -973,6 +974,7 @@
             mc: d.mcKey,
             mc_nazev: d.name,
             zpusob_platby: 'prevod',
+            variabilni_symbol: vs || '',
             utm_source: TRACKING.utm_source,
             utm_medium: TRACKING.utm_medium,
             utm_campaign: TRACKING.utm_campaign,
@@ -994,7 +996,7 @@
         body: JSON.stringify(anBody),
         keepalive: true,
       }).catch(err => console.warn('Action Network submit failed:', err));
-    })();
+    }
 
     const payload = {
       fund: FUND_ID,
@@ -1014,6 +1016,7 @@
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
       const vs = data.vs || '—';
+      submitToActionNetwork(vs !== '—' ? vs : '');
 
       document.getElementById('payAccount').textContent = BANK_ACCOUNT;
       document.getElementById('payVs').textContent = vs;
@@ -1025,6 +1028,7 @@
       successBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       console.error('Submit error:', err);
+      submitToActionNetwork(''); // VS se nepodařilo získat, dárce se do AN zapíše i tak
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnHTML;
       errorBox.innerHTML = 'Něco se pokazilo. Zkuste to prosím znovu, nebo nás kontaktujte na <a href="mailto:' + ERROR_CONTACT + '">' + ERROR_CONTACT + '</a>.';

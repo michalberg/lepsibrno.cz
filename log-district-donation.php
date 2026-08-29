@@ -6,10 +6,10 @@
  * ať jde transakci dohledat v transakce.php. dary.jsonl žádné osobní
  * údaje nemá, je to veřejně čitelný zdroj pro progress bary.
  *
- * Volá se z frontendu u platby PŘEVODEM souběžně s odesláním do Action
- * Networku, bez čekání na odpověď — stejný koncept/pořadí jako existující
- * log-donor.php v hlavním darovacím toku (index.html): log a AN se odpalují
- * spolu, teprve pak se čeká na VS z API dary.zeleni.cz.
+ * Volá se z frontendu u platby PŘEVODEM hned, bez čekání na odpověď.
+ * Action Network se volá až POTÉ, co frontend dostane VS z API
+ * dary.zeleni.cz (aby tam mohl poslat i variabilní symbol) — dárce se
+ * do AN zapíše, i kdyby se VS získat nepodařilo, jen bez něj.
  *
  * U platby KARTOU se sem nesahá vůbec — tam log i AN řeší až
  * stripe-webhook.php po potvrzení platby (viz tam).
