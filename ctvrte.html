@@ -168,7 +168,9 @@
   .district-input {
     width: 110px; padding: 9px 30px 9px 10px;
     border: 2px solid #ddd; border-radius: 6px;
-    font-size: 14px; font-family: 'UrbanGrotesk', sans-serif; color: #022815;
+    /* 16px, ne méně — pod 16px iOS Safari při kliknutí do pole stránku
+       automaticky přiblíží a po odkliknutí se nemusí spolehlivě vrátit. */
+    font-size: 16px; font-family: 'UrbanGrotesk', sans-serif; color: #022815;
     text-align: right; outline: none; background: #fff;
     transition: border-color 0.2s;
     font-variant-numeric: tabular-nums;
@@ -256,7 +258,8 @@
   .form-field input {
     width: 100%; box-sizing: border-box;
     padding: 10px 13px; border: 2px solid #ddeee2; border-radius: 4px;
-    font-size: 14px; font-family: 'UrbanGrotesk', sans-serif;
+    /* 16px, ne méně — stejný důvod jako u .district-input (iOS Safari zoom). */
+    font-size: 16px; font-family: 'UrbanGrotesk', sans-serif;
     transition: border-color 0.2s; outline: none; color: #022815; background: #fff;
   }
   .form-field input:focus { border-color: var(--color-green); }
@@ -364,7 +367,7 @@
     }
     .district-stat-row { padding-top: 2px; }
     .district-action-col { justify-content: flex-start; }
-    .district-input { flex: 0 0 auto; width: 96px; }
+    .district-input { flex: 0 0 auto; width: 108px; }
     .district-btn { flex: 0 0 auto; padding: 10px 18px; }
     .district-dynamic { text-align: left; }
 
