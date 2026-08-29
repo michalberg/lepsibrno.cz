@@ -241,6 +241,7 @@
 
   .method-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 26px; }
   .method-btn {
+    min-width: 0; box-sizing: border-box;
     padding: 14px 12px; border: 2px solid #e3e3e3; border-radius: 12px; background: #fff;
     cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; color: #555;
     transition: border-color .15s, background .15s, color .15s; text-align: center;
@@ -250,9 +251,10 @@
   .method-btn small { display: block; font-weight: 500; font-size: 12px; color: #888; margin-top: 3px; }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .form-field label { font-size: 12px; font-weight: 700; color: #444; letter-spacing: 0.04em; text-transform: uppercase; }
   .form-field input {
+    width: 100%; box-sizing: border-box;
     padding: 10px 13px; border: 2px solid #ddeee2; border-radius: 4px;
     font-size: 14px; font-family: 'UrbanGrotesk', sans-serif;
     transition: border-color 0.2s; outline: none; color: #022815; background: #fff;
@@ -937,10 +939,9 @@
     }
 
     // ---- Platba převodem -----------------------------------------------------
-    // Log (dary.jsonl) se odpálí hned, bez čekání. Action Network se volá
-    // až PO získání VS z API dary.zeleni.cz, ať tam jde poslat i variabilní
-    // symbol — pokud by se VS přesto nepodařilo získat, dárce se do AN
-    // zapíše i tak, jen bez VS (viz catch větev níže).
+    // Pořadí stejné jako u hlavního darovacího toku na index.html: log
+    // (dary.jsonl) a Action Network se odpálí spolu bez čekání, teprve
+    // pak se čeká na VS z API dary.zeleni.cz.
     (function logDonation() {
       fetch(LOG_URL, {
         method: 'POST',
@@ -954,7 +955,7 @@
         .catch(err => console.warn('Log/refresh dárcovství selhal:', err));
     })();
 
-    function submitToActionNetwork(vs) {
+    (function submitToActionNetwork() {
       const tags = [AN_TAG_COMMON, AN_TAG_COMMON + '-' + d.mcKey];
       const anBody = {
         person: {
@@ -974,7 +975,6 @@
             mc: d.mcKey,
             mc_nazev: d.name,
             zpusob_platby: 'prevod',
-            variabilni_symbol: vs || '',
             utm_source: TRACKING.utm_source,
             utm_medium: TRACKING.utm_medium,
             utm_campaign: TRACKING.utm_campaign,
@@ -996,7 +996,7 @@
         body: JSON.stringify(anBody),
         keepalive: true,
       }).catch(err => console.warn('Action Network submit failed:', err));
-    }
+    })();
 
     const payload = {
       fund: FUND_ID,
@@ -1016,7 +1016,6 @@
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
       const vs = data.vs || '—';
-      submitToActionNetwork(vs !== '—' ? vs : '');
 
       document.getElementById('payAccount').textContent = BANK_ACCOUNT;
       document.getElementById('payVs').textContent = vs;
@@ -1028,7 +1027,6 @@
       successBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       console.error('Submit error:', err);
-      submitToActionNetwork(''); // VS se nepodařilo získat, dárce se do AN zapíše i tak
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnHTML;
       errorBox.innerHTML = 'Něco se pokazilo. Zkuste to prosím znovu, nebo nás kontaktujte na <a href="mailto:' + ERROR_CONTACT + '">' + ERROR_CONTACT + '</a>.';
