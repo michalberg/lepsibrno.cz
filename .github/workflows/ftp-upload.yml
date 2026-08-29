@@ -26,8 +26,12 @@ jobs:
           REMOTE="lepsibrno.cz/public_html"
           OPTS="set ssl:verify-certificate no; set ssl:check-hostname no; set ftp:ssl-allow true; set ftp:ssl-protect-data true; set ftp:use-pasv-address no; set net:timeout 15; set net:max-retries 2;"
           CMDS="$OPTS"
-          for f in transakce.php sync-onetime.php db.php create-checkout.php stripe-webhook.php log-donor.php index.html dekujeme.html mc-store.php log-district-donation.php create-district-checkout.php rebuild-stav.php ctvrte.html; do
+          for f in transakce.php sync-onetime.php db.php create-checkout.php stripe-webhook.php log-donor.php index.html dekujeme.html mc-store.php log-district-donation.php create-district-checkout.php rebuild-stav.php ctvrte.html .htaccess; do
             CMDS="$CMDS put -O $REMOTE $f;"
+          done
+          CMDS="$CMDS mkdir -p $REMOTE/assets;"
+          for f in assets/hvezdicka-crop.png assets/logo-zelene-brno-crop.png assets/refren-crop.png assets/qrcode.js; do
+            CMDS="$CMDS put -O $REMOTE/assets $f;"
           done
           CMDS="$CMDS bye"
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$CMDS"
