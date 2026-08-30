@@ -11,27 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Render config.php from template
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
-          AN_API_TOKEN: ${{ secrets.AN_API_TOKEN }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          DARY_USERNAME: ${{ secrets.DARY_USERNAME }}
-          DARY_PASSWORD: ${{ secrets.DARY_PASSWORD }}
-        run: |
-          php -r '
-            $tpl = file_get_contents("config.template.php");
-            $out = strtr($tpl, [
-              "__STRIPE_SECRET_KEY__"     => getenv("STRIPE_SECRET_KEY") ?: "",
-              "__STRIPE_WEBHOOK_SECRET__" => getenv("STRIPE_WEBHOOK_SECRET") ?: "",
-              "__AN_API_TOKEN__"          => getenv("AN_API_TOKEN") ?: "",
-              "__ADMIN_PASSWORD__"        => getenv("ADMIN_PASSWORD") ?: "",
-              "__DARY_USERNAME__"         => getenv("DARY_USERNAME") ?: "",
-              "__DARY_PASSWORD__"         => getenv("DARY_PASSWORD") ?: "",
-            ]);
-            file_put_contents("config.php", $out);
-          '
+      # config.php se sem záměrně negeneruje — o něj se stará výhradně
+      # deploy-config.yml (spouštěný ručně po změně secretu). Kdyby se
+      # renderoval i tady, každý běžný push by potichu přepsal config.php
+      # na serveru aktuálním obsahem GitHub Secrets, i kdyby byly některé
+      # z nich zastaralé (viz README.md, bod „config.php se přepisuje
+      # CELÝ").
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
