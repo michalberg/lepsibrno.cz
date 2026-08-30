@@ -16,8 +16,16 @@ veřejné).
 | Soubor | Účel |
 |---|---|
 | `index.html` | Homepage — jednorázový dar na vybranou městskou část, platba převodem (QR) nebo kartou |
-| `predplatne.html` | Měsíční předplatné (původní `index.html`, přejmenováno) |
+| `predplatne.html` | Měsíční předplatné — samostatný, plně funkční formulář (starší `index.html`, sem přesunutý) |
 | `dekujeme.html` | Děkovná stránka po Stripe platbě předplatného |
+
+`index.html` a `predplatne.html` běží **souběžně, ne jedna místo druhé** —
+dvě oddělené kampaně/formuláře se společným backendem a designem. Homepage
+(`index.html`) teď patří kampani na čtvrti; `predplatne.html` je pořád živý
+a aktivně používaný formulář na měsíční předplatné, jen na něj z homepage
+nikdo neodkazuje (dostupný přímo na `/predplatne.html`). Vlastní platební
+flow: `create-checkout.php` → `stripe-webhook.php` (větev bez `mc` v
+metadatech) → `record_donor()`/tabulka `donors`.
 
 ### Platby a zápis dárců
 
