@@ -467,7 +467,7 @@
       <p class="hero-subtitle">Vybíráme na inzerci v <strong>radničních zpravodajích</strong>, které dostane každá domácnost do schránky. Aby o nás vědělo celé Brno, ne jen centrum.</p>
 
       <div class="narrative">
-        <p>Do zastupitelstva města se volí za celé Brno najednou, takže hlas z Tuřan váží stejně jako hlas z Veveří. Bez čtvrtí, kde nás lidé zatím tolik neznají, se k výsledku, který nás dostane na radnici, nedostaneme.</p>
+        <p>Do zastupitelstva města se volí za celé Brno najednou, takže hlas z Obřan váží stejně jako hlas z Veveří. Bez čtvrtí, kde nás lidé zatím tolik neznají, se k výsledku, který nás dostane na radnici, nedostaneme.</p>
         <p class="narrative-cta">Zpravodaje uzavírají inzerci během září. Věříme, že to spolu zvládneme.</p>
       </div>
 
@@ -482,7 +482,7 @@
 
   <section class="section">
     <div class="section-inner">
-      <p class="table-eyebrow">Celkem čtrnáct čtvrtí, <span id="totalMailboxes">—</span> schránek</p>
+      <p class="table-eyebrow">Celkem jedenáct čtvrtí, <span id="totalMailboxes">—</span> schránek</p>
       <div class="district-table" id="districtTable"></div>
 
       <div class="missing-block">
@@ -636,19 +636,17 @@
   // "current" je 0, dokud se nenačte /stav.json (viz níže) — rozbitá tabulka
   // je horší než tabulka bez čísel, takže stránka musí fungovat i bez něj.
   const DISTRICTS = [
-    { name: 'Brno-sever',            mailboxes: 28000, goal: 9000,  current: 0 },
-    { name: 'Bystrc',                mailboxes: 13000, goal: 11000, current: 0 },
-    { name: 'Černovice',             mailboxes: 4000,  goal: 4000,  current: 0 },
-    { name: 'Kohoutovice',           mailboxes: 6000,  goal: 7000,  current: 0 },
-    { name: 'Komín',                 mailboxes: 4200,  goal: 7500,  current: 0 },
-    { name: 'Královo Pole',          mailboxes: 16100, goal: 15000, current: 0 },
-    { name: 'Líšeň',                 mailboxes: 12100, goal: 12500, current: 0 },
-    { name: 'Maloměřice a Obřany',   mailboxes: 2300,  goal: 1500,  current: 0 },
-    { name: 'Nový Lískovec',         mailboxes: 5000,  goal: 5000,  current: 0 },
-    { name: 'Tuřany',                mailboxes: 1100,  goal: 2000,  current: 0 },
-    { name: 'Vinohrady',             mailboxes: 5850,  goal: 5500,  current: 0 },
-    { name: 'Žabovřesky',            mailboxes: 12000, goal: 9500,  current: 0 },
-    { name: 'Židenice',              mailboxes: 11600, goal: 8000,  current: 0 },
+    { name: 'Brno-sever',            mailboxes: 28000, goal: 10000, current: 0 },
+    { name: 'Bystrc',                mailboxes: 13000, goal: 12000, current: 0 },
+    { name: 'Černovice',             mailboxes: 4000,  goal: 4500,  current: 0 },
+    { name: 'Komín',                 mailboxes: 4200,  goal: 8000,  current: 0 },
+    { name: 'Královo Pole',          mailboxes: 16100, goal: 16500, current: 0 },
+    { name: 'Líšeň',                 mailboxes: 12100, goal: 13500, current: 0 },
+    { name: 'Maloměřice a Obřany',   mailboxes: 2300,  goal: 4500,  current: 0 },
+    { name: 'Nový Lískovec',         mailboxes: 5000,  goal: 5500,  current: 0 },
+    { name: 'Vinohrady',             mailboxes: 5850,  goal: 6000,  current: 0 },
+    { name: 'Žabovřesky',            mailboxes: 12000, goal: 10500, current: 0 },
+    { name: 'Židenice',              mailboxes: 11600, goal: 9000,  current: 0 },
   ];
 
   const MIN_DONATION = 50;
