@@ -33,6 +33,7 @@ jobs:
             **/node_modules/**
             zadani.md
             README.md
+            config.php
             config.template.php
             config.local.php
             matching-status.json
