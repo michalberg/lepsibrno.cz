@@ -89,9 +89,21 @@ mechanismus), přepíše se zpátky na starou/špatnou hodnotu.
 odpovídají aktuální realitě, ne jen ten, který zrovna měníš.**
 
 `deploy.yml` (běžný automatický deploy při push) se `config.php` nedotýká
-vůbec — dřív ho taky renderoval a nahrával při každém pushi (to původně
-způsobilo incident popsaný v bodě 5), tenhle render-krok byl proto z
-`deploy.yml` odstraněný.
+vůbec — dřív ho taky renderoval a nahrával při každém pushi, tenhle
+render-krok byl proto z `deploy.yml` odstraněný.
+
+**Past incident (vyřešeno, ponecháno jako varování):** Po odstranění
+render-kroku z `deploy.yml` chybělo `config.php` doplnit i do jeho
+`exclude` seznamu. `FTP-Deploy-Action` dělá stavovou synchronizaci — pamatuje
+si, co dřív nahrála, a soubor, který dřív existoval lokálně a teď
+neexistuje (a není v `exclude`), na serveru **smaže**. Protože `config.php`
+byl dřív render-krokem vytvářený a nahraný, jeho odstranění bez zápisu do
+`exclude` způsobilo, že další dva pushe `config.php` ze serveru smazaly —
+tři dny byly nefunkční všechny skripty, co ho vyžadují (`create-checkout.php`,
+`stripe-webhook.php`, `transakce.php`, `sync-onetime.php`…), včetně plateb
+kartou. **Jakýkoli soubor, který na server nahráváš JINAK než přes
+`deploy.yml` (ručně, jiným workflow), musí být v `deploy.yml` v `exclude`
+seznamu — jinak ho `FTP-Deploy-Action` při nejbližším běhu smaže.**
 
 ### 2. Spojení GitHub Actions → hosting je nespolehlivé
 
@@ -130,10 +142,30 @@ Bez týhle kontroly (starší verze kódu) mohlo opakované doručení vytvořit
 ### 5. Sync s dary.zeleni.cz (`sync-onetime.php`)
 
 Cron běží přímo na hostingu (mimo tenhle repo a mimo GitHub Actions), denně
-kolem 6:00, volá `sync-onetime.php` přes HTTP s `?token=`. Pokud přihlášení
-k API dary.zeleni.cz začne padat na HTTP 401, skoro vždy jde o bod 1 výše —
-zastaralé `DARY_USERNAME`/`DARY_PASSWORD` v GitHub Secrets přepsané do
-`config.php` při nějakém redeployi.
+kolem 6:00, volá `sync-onetime.php` přes HTTP s `?token=`. Token je uložený
+napevno v nastavení cronu na hostingu (Savana Hosting — plánované úlohy),
+nezávisle na tomhle repu.
+
+Dvě různé věci můžou způsobit, že se dary nedosynchronizují — obě se
+projeví jinak:
+
+- **Přihlášení k API dary.zeleni.cz padá na HTTP 401.** Skoro vždy jde o
+  bod 1 výše — zastaralé `DARY_USERNAME`/`DARY_PASSWORD` v GitHub Secrets
+  přepsané do `config.php` při nějakém redeployi.
+- **Nic se nestane, žádná chyba, ale dary nepřibývají.** Token uložený v
+  cronu na hostingu je zastaralý — neodpovídá aktuálnímu `ADMIN_PASSWORD`.
+  `sync-onetime.php` při neplatném tokenu vrátí tiše `200 OK` a nic
+  neudělá (viz kód — schválně kvůli cron validátorům, co čekají 200, ne
+  403). Tenhle typ selhání se nedá poznat ze stavového kódu ani z chybové
+  hlášky — pozná se jen tak, že spustíš `?dry-run=1` s aktuálním tokenem
+  ručně a porovnáš, kolik toho najde „k odeslání" oproti tomu, co reálně
+  denně přibývá. **Po každé rotaci `ADMIN_PASSWORD` je potřeba ručně
+  aktualizovat i token uložený v nastavení cronu na hostingu** — nic to
+  neudělá samo.
+
+V obou případech je diagnostika stejná: spustit ručně
+`sync-onetime.php?token=...&dry-run=1` a podívat se na první řádek
+výstupu (přihlášení) a na to, co dry-run najde jako „k odeslání".
 
 ## Deploy checklist
 
