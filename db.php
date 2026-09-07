@@ -136,6 +136,13 @@ function donor_db(): PDO {
     foreach (['donors', 'onetime_synced', 'recurring_synced'] as $table) {
         ensure_column($pdo, $table, 'tf_match', 'INTEGER NOT NULL DEFAULT 0');
     }
+    // Doplňkové sloupce pro ručně dopsané dary (add-manual-donation.php) —
+    // dary z dary.zeleni.cz mimo fond "brno", které sync-onetime.php nikdy
+    // nestáhne (filtruje jen na dary_fund_id). "kampan" u běžných
+    // synchronizovaných řádků zůstává NULL (implicitně "brno").
+    foreach (['donor_birth', 'donor_address', 'donor_zip', 'kampan'] as $col) {
+        ensure_column($pdo, 'onetime_synced', $col, 'TEXT');
+    }
     return $pdo;
 }
 
