@@ -607,7 +607,7 @@ function render_login(string $error, bool $notConfigured): void {
           <td class="num"><?= $r['amount'] !== null ? kc((int)$r['amount']) : '—' ?></td>
           <td><?= h($r['vs']) ?></td>
           <td><?= h($r['donor_city']) ?></td>
-          <td class="muted"><?= h($r['kampan'] ?: 'brno') ?><?php if (str_starts_with((string)$r['payment_id'], 'manual-')): ?> <span title="Zapsáno ručně, mimo automatický sync">✍️</span><?php endif; ?></td>
+          <td class="muted"><?= h($r['kampan'] ?: 'brno') ?><?php if (strpos((string)$r['payment_id'], 'manual-') === 0): ?> <span title="Zapsáno ručně, mimo automatický sync">✍️</span><?php endif; ?></td>
           <td class="muted"><?= h(substr((string)$r['synced_at'], 0, 10)) ?></td>
         </tr>
       <?php endforeach; ?>
